@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>版本历史 - AcfunPlus</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            color: #333;
+            overflow-x: hidden;
+        }
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 60px 28px 40px;
+        }
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 36px;
+            color: #FD4C5B;
+            font-size: 15px;
+            text-decoration: none;
+            transition: all 0.3s;
+            padding: 8px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        .back-btn:hover {
+            background: rgba(253, 76, 91, 0.08);
+            transform: translateX(-4px);
+        }
+        .page-title {
+            font-size: 32px;
+            font-weight: 800;
+            color: #FD4C5B;
+            margin-bottom: 48px;
+            letter-spacing: 1px;
+        }
+        .card {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 28px 32px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            margin-bottom: 32px;
+            transition: box-shadow 0.3s ease;
+        }
+        .card:hover {
+            box-shadow: 0 4px 20px rgba(253, 76, 91, 0.08);
+        }
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #444;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #FD4C5B;
+            display: inline-block;
+        }
+
+        /* 版本条目 */
+        .version-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 16px 0;
+            border-bottom: 1px dashed #eee;
+        }
+        .version-item:last-child {
+            border-bottom: none;
+        }
+        .version-item .version-tag {
+            font-size: 20px;
+            font-weight: 700;
+            color: #FD4C5B;
+        }
+        .version-item .version-date {
+            font-size: 14px;
+            color: #999;
+        }
+        .version-item .version-log {
+            font-size: 15px;
+            color: #555;
+            line-height: 1.6;
+            padding-left: 4px;
+        }
+        .version-item .version-log::before {
+            content: "• ";
+            color: #FD4C5B;
+            font-weight: 600;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 60px;
+            padding-top: 28px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .footer a {
+            color: #bbb;
+            font-size: 13px;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        .footer a:hover {
+            color: #FD4C5B;
+        }
+        .footer .dot {
+            width: 4px;
+            height: 4px;
+            background: #ddd;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .footer .version {
+            font-size: 13px;
+            color: #bbb;
+        }
+        .footer .copyright {
+            font-size: 13px;
+            color: #bbb;
+        }
+
+        /* 电脑端 */
+        @media (min-width: 1024px) {
+            .container {
+                max-width: 800px;
+                padding: 80px 40px 60px;
+            }
+            .page-title {
+                font-size: 36px;
+                margin-bottom: 56px;
+            }
+            .card {
+                padding: 32px 40px;
+                margin-bottom: 40px;
+                border-radius: 24px;
+            }
+            .section-title {
+                font-size: 22px;
+            }
+            .version-item .version-tag {
+                font-size: 22px;
+            }
+            .version-item .version-log {
+                font-size: 16px;
+            }
+        }
+
+        /* 超宽屏 */
+        @media (min-width: 1440px) {
+            .container {
+                max-width: 880px;
+            }
+        }
+
+        /* 手机端 */
+        @media (max-width: 480px) {
+            body {
+                background: #ffffff;
+            }
+            .container {
+                padding: 40px 20px 30px;
+            }
+            .page-title {
+                font-size: 26px;
+                margin-bottom: 32px;
+            }
+            .card {
+                padding: 20px 22px;
+                margin-bottom: 24px;
+                border-radius: 18px;
+                box-shadow: 0 1px 8px rgba(0,0,0,0.05);
+            }
+            .section-title {
+                font-size: 17px;
+            }
+            .version-item .version-tag {
+                font-size: 18px;
+            }
+            .version-item .version-log {
+                font-size: 14px;
+            }
+            .back-btn {
+                font-size: 14px;
+                padding: 6px 12px;
+            }
+            .footer {
+                gap: 12px;
+            }
+        }
+    </style>
+    <base target="_blank">
+</head>
+<body>
+    <div class="container">
+        <a href="javascript:void(0)" class="back-btn" id="backBtn">← 返回首页</a>
+        <div class="page-title">版本历史</div>
+
+        <div class="card">
+            <div class="section-title">更新日志</div>
+            <div class="version-item">
+                <div class="version-tag">v0.0.1</div>
+                <div class="version-date">2026 / 8 / 17</div>
+                <div class="version-log">初始网页建成</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <span class="version">v0.0.1</span>
+            <span class="dot"></span>
+            <span class="copyright">Copyright &copy; 2026 乗芷</span>
+            <span class="dot"></span>
+            <a href="./index.html">AcfunPlus</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('backBtn').addEventListener('click', function(e) {
+            window.location.replace('./index.html');
+        });
+    </script>
+</body>
+</html>

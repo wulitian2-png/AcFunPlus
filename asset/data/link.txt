@@ -1,0 +1,12 @@
+# w 字段（数据来源）专用：代号 → URL 前缀
+①=http://www.acfun.cn/html
+②=http://www.acfun.cn/plus
+③=https://www.acfun.cn/a
+④=http://api.ivideo.sina.com.cn/
+
+# vp 字段（视频分区）专用：代号 → 分区名
+# 写在 [vp] 段内，与上面 w 段的代号互不影响，可用任意字符
+[vp]
+😋=短篇
+😁=动画连载
+😂=周刊少年MAD

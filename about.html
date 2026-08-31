@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>关于 - AcfunPlus</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        html,
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            color: #333;
+            overflow-x: hidden;
+        }
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 60px 28px 40px;
+        }
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 36px;
+            color: #FD4C5B;
+            font-size: 15px;
+            text-decoration: none;
+            transition: all 0.3s;
+            padding: 8px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        .back-btn:hover {
+            background: rgba(253, 76, 91, 0.08);
+            transform: translateX(-4px);
+        }
+        .page-title {
+            font-size: 32px;
+            font-weight: 800;
+            color: #FD4C5B;
+            margin-bottom: 48px;
+            letter-spacing: 1px;
+        }
+        .card {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 28px 32px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            margin-bottom: 32px;
+            transition: box-shadow 0.3s ease;
+        }
+        .card:hover {
+            box-shadow: 0 4px 20px rgba(253, 76, 91, 0.08);
+        }
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #444;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #FD4C5B;
+            display: inline-block;
+        }
+        .link-card {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 20px;
+            background: #fafafa;
+            border-radius: 16px;
+            border: 1px solid #f0f0f0;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: #555;
+            font-size: 16px;
+        }
+        .link-card:hover {
+            border-color: #FD4C5B;
+            background: #fff5f6;
+            transform: translateX(6px);
+            box-shadow: 0 4px 16px rgba(253, 76, 91, 0.12);
+        }
+        .link-card+.link-card {
+            margin-top: 12px;
+        }
+        .link-card .icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            flex-shrink: 0;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+        .link-card .icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .link-card .url {
+            color: #888;
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        /* 紧凑列表样式——用于 IP 地址，无图标、无标题，只显示 URL */
+        .link-card.compact {
+            padding: 8px 14px;
+            font-size: 14px;
+            background: #f9f9f9;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            margin-top: 6px;
+            transform: none !important;
+            gap: 0;
+        }
+        .link-card.compact:hover {
+            background: #fff5f6;
+            border-color: #FD4C5B;
+            transform: translateX(4px) !important;
+            box-shadow: none;
+        }
+        .link-card.compact .icon {
+            display: none;
+        }
+        .link-card.compact .url {
+            margin-top: 0;
+            color: #555;
+            font-size: 14px;
+        }
+        .link-card.compact .desc {
+            display: none;
+        }
+
+        /* 分隔线 */
+        .divider {
+            margin: 20px 0 16px 0;
+            border-top: 1px dashed #e0e0e0;
+        }
+
+        /* 声明卡片文字样式 */
+        .declaration-text {
+            font-size: 16px;
+            line-height: 1.7;
+            color: #555;
+            padding: 4px 0;
+        }
+        .author-name {
+            font-size: 22px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .info-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 0;
+            font-size: 16px;
+            color: #555;
+            border-bottom: 1px dashed #eee;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .info-row .label {
+            color: #999;
+            font-size: 15px;
+            min-width: 80px;
+            flex-shrink: 0;
+            font-weight: 500;
+        }
+        .info-row a {
+            color: #FD4C5B;
+            text-decoration: none;
+            word-break: break-all;
+            transition: opacity 0.2s;
+        }
+        .info-row a:hover {
+            opacity: 0.8;
+            text-decoration: underline;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 60px;
+            padding-top: 28px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .footer a {
+            color: #bbb;
+            font-size: 13px;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        .footer a:hover {
+            color: #FD4C5B;
+        }
+        .footer .dot {
+            width: 4px;
+            height: 4px;
+            background: #ddd;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .footer .version {
+            font-size: 13px;
+            color: #bbb;
+        }
+        .footer .copyright {
+            font-size: 13px;
+            color: #bbb;
+        }
+
+        /* 电脑端 */
+        @media (min-width: 1024px) {
+            .container {
+                max-width: 800px;
+                padding: 80px 40px 60px;
+            }
+            .page-title {
+                font-size: 36px;
+                margin-bottom: 56px;
+            }
+            .card {
+                padding: 32px 40px;
+                margin-bottom: 40px;
+                border-radius: 24px;
+            }
+            .section-title {
+                font-size: 22px;
+            }
+            .link-card {
+                padding: 18px 24px;
+                font-size: 17px;
+            }
+            .link-card .icon {
+                width: 48px;
+                height: 48px;
+            }
+            .link-card.compact {
+                padding: 10px 18px;
+                font-size: 15px;
+            }
+            .link-card.compact .url {
+                font-size: 15px;
+            }
+            .declaration-text {
+                font-size: 17px;
+            }
+            .info-row {
+                font-size: 17px;
+                padding: 14px 0;
+            }
+            .author-name {
+                font-size: 24px;
+            }
+        }
+
+        /* 超宽屏 */
+        @media (min-width: 1440px) {
+            .container {
+                max-width: 880px;
+            }
+        }
+
+        /* 手机端 */
+        @media (max-width: 480px) {
+            body {
+                background: #ffffff;
+            }
+            .container {
+                padding: 40px 20px 30px;
+            }
+            .page-title {
+                font-size: 26px;
+                margin-bottom: 32px;
+            }
+            .card {
+                padding: 20px 22px;
+                margin-bottom: 24px;
+                border-radius: 18px;
+                box-shadow: 0 1px 8px rgba(0, 0, 0, 0.05);
+            }
+            .section-title {
+                font-size: 17px;
+            }
+            .link-card {
+                padding: 12px 14px;
+                font-size: 15px;
+            }
+            .link-card .icon {
+                width: 38px;
+                height: 38px;
+            }
+            .link-card.compact {
+                padding: 6px 12px;
+                font-size: 13px;
+            }
+            .link-card.compact .url {
+                font-size: 13px;
+            }
+            .declaration-text {
+                font-size: 15px;
+            }
+            .info-row {
+                flex-direction: column;
+                gap: 4px;
+                font-size: 15px;
+            }
+            .info-row .label {
+                min-width: auto;
+                font-size: 13px;
+            }
+            .author-name {
+                font-size: 20px;
+            }
+            .back-btn {
+                font-size: 14px;
+                padding: 6px 12px;
+            }
+            .footer {
+                gap: 12px;
+            }
+        }
+    </style>
+    <base target="_blank">
+</head>
+<body>
+    <div class="container">
+        <!-- 返回按钮使用 replace 替换当前页面，实现"关掉自己"的效果 -->
+        <a href="javascript:void(0)" class="back-btn" id="backBtn">← 返回首页</a>
+        <div class="page-title">关于 - AcfunPlus</div>
+
+        <!-- 网址汇总卡片 -->
+        <div class="card">
+            <div class="section-title">网址汇总</div>
+
+            <!-- 主域名 .cn -->
+            <a href="https://www.acfun.cn/" target="_blank" class="link-card">
+                <div class="icon">
+                    <img src="https://cdn.aixifan.com/ico/favicon.ico" alt="AcFun" />
+                </div>
+                <div>
+                    <div>AcFun弹幕视频网 - 认真你就输啦 (・ω・)ノ- ( ゜- ゜)つロ</div>
+                    <div class="url">https://www.acfun.cn/</div>
+                </div>
+            </a>
+
+            <!-- 主域名 .tv -->
+            <a href="https://www.acfun.tv/" target="_blank" class="link-card">
+                <div class="icon">
+                    <img src="https://cdn.aixifan.com/ico/favicon.ico" alt="AcFun" />
+                </div>
+                <div>
+                    <div>AcFun弹幕视频网 - 认真你就输啦 (・ω・)ノ- ( ゜- ゜)つロ</div>
+                    <div class="url">https://www.acfun.tv/</div>
+                </div>
+            </a>
+
+            <!-- 分隔线 -->
+            <div class="divider"></div>
+
+            <!-- 所有 IP 地址以紧凑列表展示，只显示地址 -->
+            <a href="http://222.243.146.200/" target="_blank" class="link-card compact">
+                <span class="url">http://222.243.146.200/</span>
+            </a>
+            <a href="http://124.228.254.229/" target="_blank" class="link-card compact">
+                <span class="url">http://124.228.254.229/</span>
+            </a>
+            <a href="http://220.170.79.105/" target="_blank" class="link-card compact">
+                <span class="url">http://220.170.79.105/</span>
+            </a>
+            <a href="http://124.228.254.234/" target="_blank" class="link-card compact">
+                <span class="url">http://124.228.254.234/</span>
+            </a>
+            <a href="http://220.170.79.48/" target="_blank" class="link-card compact">
+                <span class="url">http://220.170.79.48/</span>
+            </a>
+            <!-- 新增 IP -->
+            <a href="http://220.170.79.109/" target="_blank" class="link-card compact">
+                <span class="url">http://220.170.79.109/</span>
+            </a>
+        </div>
+
+        <!-- 声明卡片 -->
+        <div class="card">
+            <div class="section-title">声明</div>
+            <p class="declaration-text">本站不提供任何视听上传服务，所有内容均来自视频分享站点所提供的公开引用资源。</p>
+        </div>
+
+        <!-- 关于作者卡片 -->
+        <div class="card">
+            <div class="section-title">关于作者</div>
+            <div class="author-name">乗芷</div>
+            <div class="info-row">
+                <span class="label">邮箱</span>
+                <a href="mailto:b132477293@qq.com">b132477293@qq.com</a>
+            </div>
+            <div class="info-row">
+                <span class="label">邮箱</span>
+                <a href="mailto:wulitian2@outlook.com">wulitian2@outlook.com</a>
+            </div>
+            <div class="info-row">
+                <span class="label">哔哩哔哩</span>
+                <a href="https://space.bilibili.com/3546768318925461" target="_blank">https://space.bilibili.com/3546768318925461</a>
+            </div>
+        </div>
+
+        <div class="footer">
+            <span class="version">v0.0.1</span>
+            <span class="dot"></span>
+            <span class="copyright">Copyright &copy; 2026 乗芷</span>
+            <span class="dot"></span>
+            <a href="./index.html">AcfunPlus</a>
+        </div>
+    </div>
+
+    <script>
+        // 点击返回首页：用 replace 替换当前页面，相当于关闭当前标签页并跳转到首页
+        document.getElementById('backBtn').addEventListener('click', function(e) {
+            window.location.replace('./index.html');
+        });
+    </script>
+</body>
+</html>
