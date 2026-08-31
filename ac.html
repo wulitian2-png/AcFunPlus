@@ -16,7 +16,7 @@
 
         html, body {
             min-height: 100vh;
-            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            background: #f0f2f5;
             font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
             color: #333;
             display: flex;
@@ -490,7 +490,8 @@
             align-items: center;
             text-align: center;
             gap: 16px;
-            padding: 48px 32px;
+            padding: 64px 32px;
+            min-height: 280px;
         }
         .not-found-icon {
             font-size: 48px;
@@ -740,6 +741,12 @@
             .divider {
                 display: none;
             }
+            /* 状态卡（加载/未找到/错误）：撑满容器，与 video-card 同款（同内边距/同圆角/同阴影） */
+            .loading-card, .not-found-card, .error-card {
+                align-self: stretch;
+                padding: 80px 40px;
+                min-height: 320px;
+            }
         }
 
         @media (min-width: 1024px) {
@@ -780,9 +787,11 @@
             .stat-value {
                 font-size: 17px;
             }
-            /* 窄内容卡片不用跟着拉宽 */
+            /* 状态卡（加载/未找到/错误）撑满容器，与 video-card 同款 */
             .not-found-card, .error-card, .loading-card {
-                max-width: 640px;
+                max-width: none;
+                padding: 100px 60px;
+                min-height: 380px;
             }
         }
 
@@ -1649,10 +1658,10 @@
             statsGrid.innerHTML = '';
 
             const stats = [
-                { key: 'pl', label: '播放'},
-                { key: 'd', label: '弹幕'},
-                { key: 'b', label: '香蕉'},
-                { key: 'co', label: '收藏'},
+                { key: 'pl', label: '播放', icon: '▶' },
+                { key: 'd', label: '弹幕', icon: '💬' },
+                { key: 'b', label: '香蕉', icon: '🍌' },
+                { key: 'co', label: '收藏', icon: '⭐' },
             ];
 
             for (const stat of stats) {
