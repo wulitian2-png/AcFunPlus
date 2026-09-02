@@ -3,7 +3,7 @@
 > 一个轻量 AcFun 信息聚合页。  
 > “认真你就输啦 (・ω・)ノ- ( ゜- ゜)つロ”
 
-[![版本](https://img.shields.io/badge/版本-v0.0.1.1-FD4C5B?style=flat-square)](./about.html)
+[![版本](https://img.shields.io/badge/版本-v0.0.1.2-FD4C5B?style=flat-square)](./about.html)
 [![状态](https://img.shields.io/badge/状态-积极维护-brightgreen?style=flat-square)]()
 [![许可](https://img.shields.io/badge/许可-CC%20BY--NC--SA%204.0-lightgrey?style=flat-square)]()
 
