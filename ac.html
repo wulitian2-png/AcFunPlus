@@ -356,6 +356,13 @@
             cursor: default;
             color: #555;
         }
+        /* 数据来源折叠：超过 MAX_VISIBLE 的条目默认隐藏，点"展开全部"后显示 */
+        .source-link.extra {
+            display: none;
+        }
+        .source-list.expanded .source-link.extra {
+            display: block;
+        }
 
         /* ========== 分P列表 ========== */
         .parts-block {
@@ -1409,7 +1416,7 @@
 
         // ==================== 渲染数据来源链接列表（w 字段） ====================
         // 每条 <v> 分隔的来源先做代号替换，再渲染成可点击的紧凑链接卡片；
-        // 超过 6 条折叠，非链接文本原样展示为灰色卡片
+        // 超过 2 条折叠，非链接文本原样展示为灰色卡片
         async function renderSourceBlock(raw) {
             const block = $('sourceBlock');
             const list = block.querySelector('.source-list');
@@ -1435,7 +1442,7 @@
 
             block.style.display = '';
 
-            const MAX_VISIBLE = 6;
+            const MAX_VISIBLE = 2;
             entries.forEach((entry, idx) => {
                 const isLink = /^(https?:\/\/|mailto:)/i.test(entry) || /^www\./i.test(entry);
                 const el = document.createElement(isLink ? 'a' : 'span');

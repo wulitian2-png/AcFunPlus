@@ -3,6 +3,13 @@
 ②=http://www.acfun.cn/plus
 ③=https://www.acfun.cn/a
 ④=http://api.ivideo.sina.com.cn/
+⑤=http://124.228.254.229/html
+⑥=http://124.228.254.234/html
+⑦=http://220.170.79.48/html
+⑧=http://220.170.79.105/html
+⑨=http://220.170.79.109/html
+⑩=http://222.243.146.200/html
+✔=https://www.acfun.tv/html
 
 # vp 字段（视频分区）专用：代号 → 分区名
 # 写在 [vp] 段内，与上面 w 段的代号互不影响，可用任意字符
