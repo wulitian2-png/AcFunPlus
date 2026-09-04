@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#FD4C5B" />
+    <title>用户主页 - AcFunPlus</title>
+    <style>
+        /* ===== 基础重置 ===== */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { height: 100%; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+            background: #f7f7fa;
+            color: #222;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        a { color: #FD4C5B; text-decoration: none; }
+
+        /* ===== 统一组件样式（与 about.html / ac.html 一致） ===== */
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #FD4C5B;
+            font-size: 15px;
+            text-decoration: none;
+            transition: all 0.3s;
+            padding: 8px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            background: transparent;
+            border: none;
+        }
+        .back-btn:hover {
+            background: rgba(253, 76, 91, 0.08);
+            transform: translateX(-4px);
+        }
+        .page-title {
+            font-size: 32px;
+            font-weight: 800;
+            color: #FD4C5B;
+            letter-spacing: 1px;
+        }
+        .card {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 28px 32px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            transition: box-shadow 0.3s ease;
+        }
+        .card:hover { box-shadow: 0 4px 20px rgba(253, 76, 91, 0.08); }
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #444;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #FD4C5B;
+            display: inline-block;
+        }
+        /* 椭圆形按钮（高 48px / border-radius 24px） */
+        .btn {
+            height: 48px;
+            padding: 0 36px;
+            border-radius: 24px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            -webkit-appearance: none;
+            touch-action: manipulation;
+            white-space: nowrap;
+            user-select: none;
+        }
+        .btn-primary {
+            background: #FD4C5B;
+            color: #fff;
+            box-shadow: 0 4px 18px rgba(253, 76, 91, 0.28);
+        }
+        .btn-primary:hover {
+            background: #e54352;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(253, 76, 91, 0.38);
+        }
+        .btn-primary:active { transform: translateY(0) scale(0.98); }
+        .btn-outline {
+            background: transparent;
+            color: #FD4C5B;
+            border: 2px solid #FD4C5B;
+        }
+        .btn-outline:hover {
+            background: #FD4C5B;
+            color: #fff;
+        }
+        .btn-outline:active { transform: scale(0.97); }
+        a:hover { text-decoration: underline; }
+        img { display: block; max-width: 100%; }
+
+        /* ===== 全屏背景图（si 字段） ===== */
+        body {
+            background: #ffffff;
+            background-image: var(--page-bg, none);
+            background-size: cover;
+            background-position: center top;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+        /* 背景遮罩层（保证内容可读） */
+        .page-overlay {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(247, 247, 250, 0.55) 0%, rgba(247, 247, 250, 0.78) 100%);
+            z-index: 0;
+            pointer-events: none;
+        }
+        main, .footer { position: relative; z-index: 1; }
+
+        /* ===== 顶部 banner（不再独立背景，复用 body） ===== */
+        .banner {
+            position: relative;
+            width: 100%;
+            padding: 60px 0 32px;
+            background: transparent;
+        }
+        .banner-inner {
+            position: relative;
+            z-index: 2;
+            max-width: 880px;
+            margin: 0 auto;
+            padding: 0 28px;
+            display: flex;
+            align-items: flex-end;
+            gap: 24px;
+        }
+        .avatar-wrap {
+            position: relative;
+            flex-shrink: 0;
+            width: 120px;
+            height: 120px;
+        }
+        .avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #fff;
+            border: 4px solid #fff;
+            box-shadow: 0 8px 24px rgba(253, 76, 91, 0.18);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: zoom-in;
+            display: block;
+        }
+        .avatar:hover {
+            transform: scale(1.03);
+            box-shadow: 0 10px 28px rgba(253, 76, 91, 0.28);
+        }
+        .avatar-frame {
+            position: absolute;
+            inset: -8px;
+            pointer-events: none;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+        .user-meta {
+            flex: 1;
+            min-width: 0;
+            padding-bottom: 6px;
+        }
+        .name-row {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 6px;
+        }
+        .user-name {
+            font-size: 26px;
+            font-weight: 700;
+            color: #1f1f23;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.6);
+            word-break: break-all;
+        }
+        .user-name:hover { text-decoration: none; color: #FD4C5B; }
+        .uid-badge {
+            display: inline-block;
+            background: rgba(253, 76, 91, 0.95);
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 999px;
+            letter-spacing: 0.5px;
+        }
+        .verified-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: linear-gradient(135deg, #4a90e2, #5b6ee1);
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 3px 10px 3px 8px;
+            border-radius: 999px;
+        }
+        .verified-badge::before {
+            content: "✓";
+            font-size: 11px;
+            line-height: 1;
+        }
+        .contract-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: linear-gradient(135deg, #ffb84d, #ff8c42);
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 3px 10px 3px 8px;
+            border-radius: 999px;
+        }
+        .contract-badge::before {
+            content: "★";
+            font-size: 10px;
+            line-height: 1;
+        }
+        .signature {
+            font-size: 14px;
+            color: #4a4a52;
+            margin-top: 6px;
+            word-break: break-all;
+            text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
+        }
+        .signature.is-default {
+            color: #9a9aa0;
+            font-style: italic;
+        }
+
+        /* ===== 右上角缓存时间徽章 ===== */
+        /* ===== 左上角返回上页按钮（与 about.html 风格统一：简洁红字 + 箭头，hover 显背景） ===== */
+        .back-btn-fixed {
+            position: fixed;
+            top: 14px;
+            left: 14px;
+            z-index: 100;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: transparent;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 500;
+            color: #FD4C5B;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.2s, transform 0.2s;
+        }
+        .back-btn-fixed:hover {
+            background: rgba(253, 76, 91, 0.08);
+            transform: translateX(-4px);
+        }
+        .back-btn-fixed .back-arrow {
+            font-size: 16px;
+            line-height: 1;
+            font-weight: 600;
+        }
+        @media (max-width: 480px) {
+            .back-btn-fixed { top: 10px; left: 8px; font-size: 14px; padding: 5px 10px; }
+            .back-btn-fixed .back-text { display: none; }
+        }
+
+        .cache-pill {
+            position: fixed;
+            top: 14px;
+            right: 14px;
+            z-index: 100;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: transparent;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 13px;
+            color: #555;
+            font-variant-numeric: tabular-nums;
+            cursor: default;
+            user-select: none;
+            transition: background 0.2s;
+        }
+        .cache-pill:hover { background: rgba(253, 76, 91, 0.06); }
+        .cache-pill .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .cache-pill.source-online .dot { background: #4caf50; box-shadow: 0 0 4px rgba(76, 175, 80, 0.6); }
+        .cache-pill.source-local  .dot { background: #b0b0b0; }
+        .cache-pill.source-error  .dot { background: #ff8c8c; }
+        .cache-pill .label { color: #999; }
+        .cache-pill .time { color: #FD4C5B; font-weight: 500; }
+        @media (max-width: 480px) {
+            .cache-pill { top: 10px; right: 8px; font-size: 12px; padding: 5px 10px; }
+        }
+
+        /* ===== 内容卡片区 ===== */
+        .container {
+            max-width: 880px;
+            margin: 40px auto 60px;
+            padding: 0 24px;
+            position: relative;
+            z-index: 3;
+        }
+        .card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .card-header {
+            padding: 18px 22px 12px;
+            border-bottom: 1px solid #f0f0f3;
+        }
+        .card-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1f1f23;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .card-title::before {
+            content: "";
+            display: inline-block;
+            width: 3px;
+            height: 14px;
+            background: linear-gradient(180deg, #FD4C5B, #ff6b7a);
+            border-radius: 2px;
+        }
+        .card-body {
+            padding: 8px 22px 20px;
+        }
+
+        /* ===== 统计卡（4 个大数字） ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            background: #f0f0f3;
+        }
+        .stat {
+            background: #fff;
+            padding: 22px 12px;
+            text-align: center;
+            transition: background 0.2s;
+        }
+        .stat:hover { background: #fff8f9; }
+        .stat-num {
+            display: block;
+            font-size: 22px;
+            font-weight: 700;
+            color: #FD4C5B;
+            line-height: 1.2;
+            margin-bottom: 4px;
+            font-variant-numeric: tabular-nums;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #888;
+            letter-spacing: 0.5px;
+        }
+
+        /* ===== 信息字段行 ===== */
+        .info-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0;
+        }
+        .info-item {
+            display: flex;
+            align-items: baseline;
+            padding: 12px 0;
+            border-bottom: 1px dashed #f0f0f3;
+            gap: 12px;
+        }
+        .info-item:nth-last-child(-n+2) { border-bottom: none; }
+        .info-key {
+            flex-shrink: 0;
+            width: 64px;
+            font-size: 13px;
+            color: #888;
+        }
+        .info-val {
+            flex: 1;
+            min-width: 0;
+            font-size: 14px;
+            color: #1f1f23;
+            word-break: break-all;
+        }
+        .info-val.muted { color: #b0b0b0; font-style: italic; }
+        .info-val a { color: #FD4C5B; }
+
+        /* ===== 加载/错误状态 ===== */
+        .state-box {
+            max-width: 480px;
+            margin: 80px auto;
+            background: #fff;
+            border-radius: 16px;
+            padding: 60px 32px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+        }
+        .state-box .icon {
+            font-size: 56px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        .state-box .msg {
+            font-size: 16px;
+            color: #555;
+            margin-bottom: 8px;
+        }
+        .state-box .sub {
+            font-size: 13px;
+            color: #999;
+        }
+        .state-box.error .icon { color: #ff8c8c; }
+        .state-box.loading .icon { color: #FD4C5B; }
+        .state-box.loading .icon::after {
+            content: "";
+            display: inline-block;
+            width: 36px;
+            height: 36px;
+            border: 3px solid #ffe0e3;
+            border-top-color: #FD4C5B;
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+        }
+        .state-box.loading .icon { font-size: 0; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ===== 底部 ===== */
+        .footer {
+            text-align: center;
+            padding: 24px 16px;
+            font-size: 12px;
+            color: #aaa;
+        }
+        .footer a { color: #888; }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 720px) {
+            .banner { padding: 48px 0 24px; }
+            .banner-inner { padding: 0 20px; gap: 18px; }
+            .avatar-wrap, .avatar { width: 96px; height: 96px; }
+            .user-name { font-size: 22px; }
+            .container { margin: 24px auto 40px; padding: 0 16px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .stat-num { font-size: 20px; }
+            .stat { padding: 18px 10px; }
+            .info-list { grid-template-columns: 1fr; }
+            .info-item { padding: 10px 0; }
+            .info-item:nth-last-child(-n+2) { border-bottom: 1px dashed #f0f0f3; }
+            .info-item:last-child { border-bottom: none; }
+            .card { border-radius: 14px; }
+        }
+        @media (max-width: 480px) {
+            .page-overlay { background: linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.78) 100%); }
+            /* 手机端 banner 改为纵向居中：头像 → 标题 → 用户框 → 签名 */
+            .banner-inner { flex-direction: column; align-items: center; text-align: center; gap: 12px; }
+            /* 标题独占一行；用户框（UID/认证/签约）放标题下方单独一行 */
+            .user-name { flex-basis: 100%; text-align: center; }
+            .name-row { justify-content: center; gap: 6px; }
+            .signature { text-align: center; }
+            /* 基础信息卡之后留出大段空白，避免被卡在视口底部划不动 */
+            .container { padding-bottom: 60px; }
+        }
+
+        /* ===== 减少动效 ===== */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { transition: none !important; animation: none !important; }
+        }
+
+        /* ===== 头像灯箱（点击放大） ===== */
+        .avatar-lightbox {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 24px;
+            animation: lb-fade 0.2s ease;
+        }
+        .avatar-lightbox.open { display: flex; }
+        @keyframes lb-fade { from { opacity: 0; } to { opacity: 1; } }
+        .avatar-lightbox .lb-close {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            color: #fff;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 22px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+        .avatar-lightbox .lb-close:hover { background: rgba(255, 255, 255, 0.25); }
+        .avatar-lightbox .lb-img {
+            max-width: min(480px, 90vw);
+            max-height: 75vh;
+            border-radius: 50%;
+            border: 6px solid #fff;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            object-fit: cover;
+            background: #fff;
+        }
+        .avatar-lightbox .lb-toolbar {
+            position: absolute;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .avatar-lightbox .lb-btn {
+            background: rgba(255, 255, 255, 0.95);
+            color: #1f1f23;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 999px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+            text-decoration: none;
+        }
+        .avatar-lightbox .lb-btn:hover { background: #fff; }
+        .avatar-lightbox .lb-btn svg { width: 16px; height: 16px; }
+        @media (max-width: 480px) {
+            .avatar-lightbox .lb-img { max-width: 80vw; max-height: 65vh; }
+            .avatar-lightbox .lb-btn { padding: 9px 14px; font-size: 13px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="page-overlay" aria-hidden="true"></div>
+
+    <button type="button" class="back-btn-fixed" id="backBtn" aria-label="返回上页">
+        <span class="back-arrow">←</span><span class="back-text">返回上页</span>
+    </button>
+
+    <div class="cache-pill source-local" id="cachePill" hidden>
+        <span class="dot"></span>
+        <span class="label">数据</span>
+        <span class="time" id="cacheTime">--</span>
+    </div>
+
+    <main id="app" aria-live="polite">
+        <div class="state-box loading" id="stateBox">
+            <div class="icon"></div>
+            <div class="msg" id="stateMsg">正在加载用户信息…</div>
+            <div class="sub" id="stateSub">读取 uid 参数和索引</div>
+        </div>
+    </main>
+
+    <!-- 头像灯箱：点击头像触发，下载按钮直接拉取原图 -->
+    <div class="avatar-lightbox" id="avatarLightbox" role="dialog" aria-label="头像预览">
+        <button class="lb-close" type="button" aria-label="关闭">×</button>
+        <img class="lb-img" id="lbImg" alt="头像大图" />
+        <div class="lb-toolbar">
+            <a class="lb-btn" id="lbDownload" download>
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                下载原图
+            </a>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        'use strict';
+
+        // ===== pic_link.txt fallback（与 ac.html 保持一致） =====
+        const PIC_LINK_FALLBACK_TEXT = `1=./asset/data/pic/Pill.png
+2=./asset/data/pic/defaultAvatar.jpg
+3=./asset/data/pic/Default_background.jpg
+4=https://imgs.aixifan.com/lXmoRJ67F6-MrQ7Nf-rIVv2a-AZ7j6r-BJJzyq.png
+`;
+
+        // ===== umanifest.json fallback（file:// 协议下 fetch 失败时回退） =====
+        // 当前实际只有 1-7000 段，如需扩展可以追加更多 range
+        const UMANIFEST_FALLBACK = {
+            ranges: [
+                { start: 1, end: 7000, path: './asset/data/user/1-7000.txt' }
+            ]
+        };
+
+        function parsePicLinkText(text) {
+            const map = {};
+            for (const line of text.split(/\r?\n/)) {
+                const t = line.trim();
+                if (!t || t.startsWith('#') || t.startsWith('//')) continue;
+                if (/^\[\w+\]$/.test(t)) continue;
+                const idx = t.indexOf('=');
+                if (idx <= 0) continue;
+                const key = t.slice(0, idx).trim().replace(/^\uFEFF/, '');
+                const val = t.slice(idx + 1).trim();
+                if (key && val) map[key] = val;
+            }
+            return map;
+        }
+
+        // 数字代号 → URL；非数字（已经是 URL）原样返回
+        function resolvePicValue(raw, picMap) {
+            if (!raw) return '';
+            if (/^\d+$/.test(raw)) {
+                return picMap[raw] || '';
+            }
+            return raw;
+        }
+
+        // 加载 pic_link.txt（带 fallback）
+        function loadPicLinkMap() {
+            return fetch('./asset/data/pic_link.txt')
+                .then(r => r.ok ? r.text() : '')
+                .then(text => text ? parsePicLinkText(text) : parsePicLinkText(PIC_LINK_FALLBACK_TEXT))
+                .catch(() => parsePicLinkText(PIC_LINK_FALLBACK_TEXT));
+        }
+
+        // 解析 umanifest 内容为 [{start, end, path}, ...]
+        // 兼容两种格式：
+        //   (A) 键值对文本：1-7000=./asset/data/user/1-7000.txt
+        //   (B) JSON：{ "1-7000": "./..." } 或 { "ranges": [...] }
+        function parseUmanifestText(text) {
+            const ranges = [];
+            // 先尝试 JSON
+            try {
+                const j = JSON.parse(text);
+                if (j && j.ranges && Array.isArray(j.ranges)) return j;
+                if (j && typeof j === 'object') {
+                    for (const k of Object.keys(j)) {
+                        const m = k.match(/^(\d+)\s*-\s*(\d+)$/);
+                        if (m) ranges.push({ start: +m[1], end: +m[2], path: j[k] });
+                    }
+                    if (ranges.length) return { ranges };
+                }
+            } catch (e) { /* 非 JSON，回退到键值对解析 */ }
+
+            // 键值对文本
+            for (const line of text.split(/\r?\n/)) {
+                const t = line.trim();
+                if (!t || t.startsWith('#') || t.startsWith('//')) continue;
+                if (t.startsWith('[') && t.endsWith(']')) continue;
+                const idx = t.indexOf('=');
+                if (idx <= 0) continue;
+                const key = t.slice(0, idx).trim();
+                const path = t.slice(idx + 1).trim();
+                const m = key.match(/^(\d+)\s*-\s*(\d+)$/);
+                if (m && path) {
+                    ranges.push({ start: +m[1], end: +m[2], path });
+                }
+            }
+            return { ranges };
+        }
+
+        // 加载 umanifest
+        function loadUmanifest() {
+            return fetch('./asset/data/umanifest.json')
+                .then(r => r.ok ? r.text() : '')
+                .then(text => {
+                    if (text) {
+                        const parsed = parseUmanifestText(text);
+                        if (parsed.ranges && parsed.ranges.length) return parsed;
+                    }
+                    return UMANIFEST_FALLBACK;
+                })
+                .catch(() => UMANIFEST_FALLBACK);
+        }
+
+        // 解析单行用户数据 [u=4;n=...;...]
+        function parseUserLine(line) {
+            const data = {};
+            // 去掉首尾 []
+            const body = line.replace(/^\[/, '').replace(/\]\s*$/, '');
+            for (const part of body.split(';')) {
+                const idx = part.indexOf('=');
+                if (idx <= 0) continue;
+                const key = part.slice(0, idx).trim();
+                const val = part.slice(idx + 1).trim();
+                if (key) data[key] = val;
+            }
+            return data;
+        }
+
+        // 根据 UID 找到对应 txt 文件路径
+        function findUserPath(manifest, uid) {
+            for (const r of manifest.ranges) {
+                if (uid >= r.start && uid <= r.end) return r.path;
+            }
+            return null;
+        }
+
+        // 加载 txt 并按 UID 找到对应行
+        // 用户数据没有缓存时间字段（h 是头像代号），本地缓存时间取
+        // txt 文件的 Last-Modified 响应头
+        async function loadUserLine(uid) {
+            const manifest = await loadUmanifest();
+            const path = findUserPath(manifest, uid);
+            if (!path) throw new Error('UID ' + uid + ' 不在索引范围内');
+            const resp = await fetch(path);
+            if (!resp.ok) throw new Error('加载 ' + path + ' 失败');
+            const text = await resp.text();
+            const fileTime = resp.headers.get('Last-Modified') || '';
+            for (const line of text.split(/\r?\n/)) {
+                const t = line.trim();
+                if (!t.startsWith('[')) continue;
+                const data = parseUserLine(t);
+                if (data.u === String(uid) || data.u === uid) {
+                    data._fileTime = fileTime;
+                    return { data, path };
+                }
+            }
+            throw new Error('在 ' + path + ' 中未找到 UID ' + uid);
+        }
+
+        // 在线 API：走本地 /api/acfun 反向代理避开浏览器 CORS 限制
+        // A 站 pc-direct REST 接口全部不支持 CORS（响应头无
+        // Access-Control-Allow-Origin，浏览器把 body 丢掉、fetch 抛
+        // TypeError: Failed to fetch）。前端页面是静态的，所以让 server.py
+        // 加一个 /api/acfun 端点做反向代理。
+        // 失败 / 网络受限 / 拿不到 profile 时静默回退本地数据库
+        async function fetchOnlineUserInfo(uid) {
+            const apiPath = `rest/pc-direct/user/userInfo?userId=${uid}`;
+            const proxyUrl = `/api/acfun?path=${encodeURIComponent(apiPath)}`;
+            try {
+                const r = await fetch(proxyUrl, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                if (!r.ok) return null;
+                const j = await r.json();
+                if (!j || j.result !== 0 || !j.profile) return null;
+                const p = j.profile;
+                if (!p.userId) return null;
+                return convertOnlineToData(p, uid);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // 在线 API 的 profile 字段 → 内部数据格式
+        function convertOnlineToData(p, uid) {
+            // 默认签名文本
+            const DEFAULT_SIG = '这个人很懒，神马都没有写…';
+            // 头像：优先 avatarImage（原图），没有则 headUrl；含 defaultAvatar.jpg 的统一代号 2
+            let hRaw = (p.avatarImage && p.avatarImage.trim()) || (p.headUrl && p.headUrl.trim()) || '';
+            if (hRaw && /tx-free-imgs\.acfun\.cn.*defaultAvatar/i.test(hRaw)) hRaw = '2';
+            // 头像框 afp：仅完全匹配时为 1，其他原样
+            const PC_FRAME = 'https://imgs.aixifan.com/lhBM1b95sZ-2I7FRf-ZBBVFf-rMnAzu-7Nfeye.png';
+            const MOBILE_FRAME = 'https://imgs.aixifan.com/lXmoRJ67F6-MrQ7Nf-rIVv2a-AZ7j6r-BJJzyq.png';
+            let afp = p.avatarFramePcImg || '';
+            if (afp) afp = (afp === PC_FRAME) ? '1' : afp;
+            let afm = p.avatarFrameMobileImg || '';
+            if (afm) afm = (afm === MOBILE_FRAME) ? '1' : afm;
+            // 空间背景：空值 → 3
+            const siRaw = (p.spaceImage && p.spaceImage.trim()) || '3';
+            // 性别：-1/0 → 不显示
+            let gRaw = '';
+            if (p.gender === 1) gRaw = '1';
+            else if (p.gender === 2) gRaw = '2';
+            // 签名：空 → 默认文本
+            const sig = (p.signature && p.signature.trim()) || DEFAULT_SIG;
+            // 认证
+            let vRaw = '';
+            if (p.verifiedType === 1) vRaw = '1';
+            else if (p.verifiedType === 2) vRaw = '2';
+            else if (p.verifiedType === 3) vRaw = '3';
+            const vtRaw = p.verifiedText || '';
+            // 是否签约
+            const iRaw = p.isContractUp ? '1' : '';
+            // 注册时间：ms → 保留
+            const rtRaw = p.registerTime ? String(p.registerTime) : '0';
+            return {
+                u: String(uid),
+                n: p.name || `UID ${uid}`,
+                s: sig,
+                g: gRaw,
+                c: p.comeFrom || '',
+                h: hRaw,
+                si: siRaw,
+                f: p.following || '0',
+                fa: p.followed || '0',
+                cc: p.contentCount || '0',
+                l: p.likeCountShow || p.likeCount || '0',
+                v: vRaw,
+                vt: vtRaw,
+                i: iRaw,
+                rt: rtRaw,
+                afp: afp || '0',
+                afm: afm || '0',
+                // 内部：本次数据拉取时间戳
+                _fetchedAt: Date.now()
+            };
+        }
+
+        // 设置右上角缓存徽章
+        function setCachePill(source, data) {
+            const pill = document.getElementById('cachePill');
+            const timeEl = document.getElementById('cacheTime');
+            if (!pill || !timeEl) return;
+            pill.hidden = false;
+            pill.classList.remove('source-online', 'source-local', 'source-error');
+            if (source === 'online') {
+                pill.classList.add('source-online');
+                const t = new Date(data._fetchedAt || Date.now());
+                timeEl.textContent = '在线 ' + fmtTimeShort(t);
+                pill.title = '数据来源：A 站在线 API · 抓取于 ' + fmtTime(data._fetchedAt);
+            } else if (source === 'local') {
+                pill.classList.add('source-local');
+                // 本地档案缓存时间 = txt 文件的 Last-Modified（用户数据的 h
+                // 字段是头像代号，不是时间）
+                const ft = data._fileTime ? new Date(data._fileTime) : null;
+                if (ft && !isNaN(ft.getTime())) {
+                    const label = `${ft.getFullYear()}-${String(ft.getMonth() + 1).padStart(2, '0')}-${String(ft.getDate()).padStart(2, '0')}`;
+                    timeEl.textContent = '本地 ' + label;
+                    pill.title = '数据来源：本地档案 · 档案更新于 ' + label;
+                } else {
+                    timeEl.textContent = '本地档案';
+                    pill.title = '数据来源：本地档案';
+                }
+            } else {
+                pill.classList.add('source-error');
+                timeEl.textContent = '本地降级';
+                pill.title = '在线 API 无效，已回退本地档案';
+            }
+        }
+
+        // 短时间格式 HH:MM:SS
+        function fmtTimeShort(d) {
+            const h = String(d.getHours()).padStart(2, '0');
+            const m = String(d.getMinutes()).padStart(2, '0');
+            const s = String(d.getSeconds()).padStart(2, '0');
+            return `${h}:${m}:${s}`;
+        }
+
+        // 工具：格式化时间戳
+        function fmtTime(ms) {
+            if (!ms || ms === '0' || ms === 0) return '';
+            const n = Number(ms);
+            if (!isFinite(n) || n < 1) return '';
+            const d = new Date(n);
+            if (isNaN(d.getTime())) return '';
+            const y = d.getFullYear();
+            const mo = String(d.getMonth() + 1).padStart(2, '0');
+            const da = String(d.getDate()).padStart(2, '0');
+            const h = String(d.getHours()).padStart(2, '0');
+            const mi = String(d.getMinutes()).padStart(2, '0');
+            const s = String(d.getSeconds()).padStart(2, '0');
+            return `${y}-${mo}-${da} ${h}:${mi}:${s}`;
+        }
+
+        // 工具：数字加千分位
+        function fmtNum(n) {
+            if (n == null || n === '' || n === '0') return '0';
+            const num = Number(n);
+            if (!isFinite(num)) return String(n);
+            if (num >= 10000) {
+                // 简化为 "1.2万"
+                return (num / 10000).toFixed(1).replace(/\.0$/, '') + '万';
+            }
+            return num.toLocaleString('en-US');
+        }
+
+        // 性别文本
+        function genderText(g) {
+            if (g === '1') return '男';
+            if (g === '2') return '女';
+            return '';
+        }
+
+        // 认证类型文本
+        function verifiedText(v, vt) {
+            if (vt) return vt;
+            if (v === '1') return '个人认证';
+            if (v === '2') return 'AcFun 官方认证';
+            if (v === '3') return '官方认证';
+            return '';
+        }
+
+        // 渲染
+        function setState(kind, msg, sub) {
+            const box = document.getElementById('stateBox');
+            if (!box) return;
+            box.className = 'state-box ' + kind;
+            document.getElementById('stateMsg').textContent = msg || '';
+            document.getElementById('stateSub').textContent = sub || '';
+        }
+
+        function el(tag, attrs, children) {
+            const e = document.createElement(tag);
+            if (attrs) {
+                for (const k of Object.keys(attrs)) {
+                    if (k === 'class') e.className = attrs[k];
+                    else if (k === 'html') e.innerHTML = attrs[k];
+                    else if (k === 'text') e.textContent = attrs[k];
+                    else if (k.startsWith('on') && typeof attrs[k] === 'function') e.addEventListener(k.slice(2), attrs[k]);
+                    else e.setAttribute(k, attrs[k]);
+                }
+            }
+            if (children) {
+                for (const c of children) {
+                    if (c == null) continue;
+                    if (typeof c === 'string') e.appendChild(document.createTextNode(c));
+                    else e.appendChild(c);
+                }
+            }
+            return e;
+        }
+
+        // 头像灯箱：点击头像后弹出大图，右下角带"下载原图"按钮
+        // 下载按钮的 href 设为原图 URL，download 属性让浏览器触发下载
+        // （同源图直接保存；跨域图浏览器会先打开预览页再让用户另存——A 站图片服务器
+        // 没设 Content-Disposition，下载行为会落到"另存为"流程，符合预期）
+        function openAvatarLightbox(url, name, uid) {
+            const box = document.getElementById('avatarLightbox');
+            const img = document.getElementById('lbImg');
+            const dl = document.getElementById('lbDownload');
+            if (!box || !img || !dl) return;
+            img.src = url;
+            // 用 UID 命名文件，方便归档（去特殊字符避免非法文件名）
+            const safeName = (name || 'avatar').replace(/[\\/:*?"<>|]/g, '_');
+            const ext = (url.split('.').pop() || 'jpg').toLowerCase().split('?')[0].split('#')[0];
+            const extClean = /^[a-z0-9]{2,5}$/.test(ext) ? ext : 'jpg';
+            dl.href = url;
+            dl.download = `${safeName}_${uid || 'x'}.${extClean}`.replace(/_{2,}/g, '_');
+            box.classList.add('open');
+            // 记录当前打开状态，给 Esc 键关闭用
+            box._opened = true;
+        }
+        function closeAvatarLightbox() {
+            const box = document.getElementById('avatarLightbox');
+            if (!box) return;
+            box.classList.remove('open');
+            box._opened = false;
+        }
+        // 灯箱事件绑定（一次性，全局有效）
+        (function setupLightbox() {
+            const box = document.getElementById('avatarLightbox');
+            if (!box) return;
+            // 关闭按钮
+            const closeBtn = box.querySelector('.lb-close');
+            if (closeBtn) closeBtn.addEventListener('click', closeAvatarLightbox);
+            // 点击背景（非图片）关闭
+            box.addEventListener('click', (e) => {
+                if (e.target === box) closeAvatarLightbox();
+            });
+            // Esc 关闭
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && box._opened) closeAvatarLightbox();
+            });
+        })();
+
+        // 返回上页按钮：先回退历史记录，兜底回首页
+        (function setupBackBtn() {
+            const btn = document.getElementById('backBtn');
+            if (!btn) return;
+            btn.addEventListener('click', () => {
+                if (history.length > 1) {
+                    history.back();
+                } else {
+                    location.href = './index.html';
+                }
+            });
+        })();
+
+        function renderUser(data, avatarUrl, bgUrl) {
+            const app = document.getElementById('app');
+            app.innerHTML = '';
+
+            const uid = data.u || '?';
+            const name = data.n || `UID ${uid}`;
+            const acfunUrl = `https://www.acfun.cn/u/${uid}`;
+
+            // === 全页背景：把 si 背景图写到 body 的 --page-bg 变量 ===
+            document.body.style.setProperty('--page-bg', `url("${bgUrl}")`);
+
+            // === Banner ===
+            const banner = el('section', { class: 'banner' });
+            const bannerInner = el('div', { class: 'banner-inner' });
+            const avatarWrap = el('div', { class: 'avatar-wrap' });
+            const avatar = el('img', { class: 'avatar', src: avatarUrl, alt: name + ' 的头像' });
+            avatar.onerror = () => { avatar.src = './asset/data/pic/defaultAvatar.jpg'; };
+            // 点击头像 → 打开灯箱（带下载按钮）
+            avatar.addEventListener('click', () => openAvatarLightbox(avatarUrl, name, uid));
+            avatarWrap.appendChild(avatar);
+            // 头像框
+            if (data.afp && data.afp !== '0' && /^https?:\/\//.test(data.afp)) {
+                const frame = el('div', { class: 'avatar-frame', style: `background-image: url("${data.afp}")` });
+                avatarWrap.appendChild(frame);
+            }
+            bannerInner.appendChild(avatarWrap);
+
+            const meta = el('div', { class: 'user-meta' });
+            const nameRow = el('div', { class: 'name-row' });
+            const nameLink = el('a', { class: 'user-name', href: acfunUrl, target: '_blank', rel: 'noopener noreferrer' }, [name]);
+            nameRow.appendChild(nameLink);
+            nameRow.appendChild(el('span', { class: 'uid-badge' }, ['UID ' + uid]));
+            // 认证徽章
+            const vt = verifiedText(data.v, data.vt);
+            if (vt) nameRow.appendChild(el('span', { class: 'verified-badge' }, [vt]));
+            // 签约徽章
+            if (data.i === '1') nameRow.appendChild(el('span', { class: 'contract-badge' }, ['AcFun 签约 UP 主']));
+            meta.appendChild(nameRow);
+
+            // 签名
+            const sig = data.s || '这个人很懒，神马都没有写…';
+            const sigEl = el('div', { class: 'signature' + ((!data.s) ? ' is-default' : '') }, [sig]);
+            meta.appendChild(sigEl);
+            bannerInner.appendChild(meta);
+            banner.appendChild(bannerInner);
+            app.appendChild(banner);
+
+            // === Container ===
+            const container = el('div', { class: 'container' });
+
+            // ---- 统计卡 ----
+            const statsCard = el('section', { class: 'card' });
+            const statsHeader = el('div', { class: 'card-header' });
+            statsHeader.appendChild(el('div', { class: 'card-title' }, ['数据统计']));
+            statsCard.appendChild(statsHeader);
+            const statsGrid = el('div', { class: 'stats-grid' });
+            const statItems = [
+                ['关注', data.f],
+                ['粉丝', data.fa],
+                ['投稿', data.cc],
+                ['获赞', data.l]
+            ];
+            for (const [label, val] of statItems) {
+                const s = el('div', { class: 'stat' });
+                s.appendChild(el('span', { class: 'stat-num' }, [fmtNum(val)]));
+                s.appendChild(el('span', { class: 'stat-label' }, [label]));
+                statsGrid.appendChild(s);
+            }
+            statsCard.appendChild(statsGrid);
+            container.appendChild(statsCard);
+
+            // ---- 基础信息卡 ----
+            const baseCard = el('section', { class: 'card' });
+            const baseHeader = el('div', { class: 'card-header' });
+            baseHeader.appendChild(el('div', { class: 'card-title' }, ['基础信息']));
+            baseCard.appendChild(baseHeader);
+            const baseBody = el('div', { class: 'card-body' });
+            const baseList = el('div', { class: 'info-list' });
+            const baseItems = [
+                ['昵称', name, false],
+                ['UID', String(uid), false]
+            ];
+            const g = genderText(data.g);
+            if (g) baseItems.push(['性别', g, false]);
+            if (data.c) baseItems.push(['地区', data.c, false]);
+            for (const [k, v, muted] of baseItems) {
+                const item = el('div', { class: 'info-item' });
+                item.appendChild(el('div', { class: 'info-key' }, [k]));
+                const valEl = el('div', { class: 'info-val' + (muted ? ' muted' : '') }, [v]);
+                item.appendChild(valEl);
+                baseList.appendChild(item);
+            }
+            baseBody.appendChild(baseList);
+            baseCard.appendChild(baseBody);
+            container.appendChild(baseCard);
+
+            // ---- 时间卡（仅当 rt > 0 时显示）----
+            const rtText = fmtTime(data.rt);
+            if (rtText) {
+                const timeCard = el('section', { class: 'card' });
+                const timeHeader = el('div', { class: 'card-header' });
+                timeHeader.appendChild(el('div', { class: 'card-title' }, ['注册信息']));
+                timeCard.appendChild(timeHeader);
+                const timeBody = el('div', { class: 'card-body' });
+                const timeList = el('div', { class: 'info-list' });
+                const item = el('div', { class: 'info-item' });
+                item.appendChild(el('div', { class: 'info-key' }, ['注册时间']));
+                item.appendChild(el('div', { class: 'info-val' }, [rtText]));
+                timeList.appendChild(item);
+                timeBody.appendChild(timeList);
+                timeCard.appendChild(timeBody);
+                container.appendChild(timeCard);
+            }
+
+            // ---- 头像框信息卡（afm 移动框，存在时显示）----
+            if (data.afm && data.afm !== '0' && /^https?:\/\//.test(data.afm)) {
+                const frameCard = el('section', { class: 'card' });
+                const frameHeader = el('div', { class: 'card-header' });
+                frameHeader.appendChild(el('div', { class: 'card-title' }, ['头像框']));
+                frameCard.appendChild(frameHeader);
+                const frameBody = el('div', { class: 'card-body' });
+                const frameList = el('div', { class: 'info-list' });
+                if (data.afp && data.afp !== '0') {
+                    const item1 = el('div', { class: 'info-item' });
+                    item1.appendChild(el('div', { class: 'info-key' }, ['PC 框']));
+                    item1.appendChild(el('div', { class: 'info-val' }, [el('a', { href: data.afp, target: '_blank', rel: 'noopener noreferrer' }, [data.afp])]));
+                    frameList.appendChild(item1);
+                }
+                const item2 = el('div', { class: 'info-item' });
+                item2.appendChild(el('div', { class: 'info-key' }, ['移动框']));
+                item2.appendChild(el('div', { class: 'info-val' }, [el('a', { href: data.afm, target: '_blank', rel: 'noopener noreferrer' }, [data.afm])]));
+                frameList.appendChild(item2);
+                frameBody.appendChild(frameList);
+                frameCard.appendChild(frameBody);
+                container.appendChild(frameCard);
+            }
+
+            app.appendChild(container);
+        }
+
+        // ===== 入口 =====
+        async function main() {
+            // 1. 解析 uid
+            const params = new URLSearchParams(location.search);
+            const uid = parseInt(params.get('uid') || '0', 10);
+            if (!uid || uid <= 0) {
+                setState('error', '未指定用户', '请用 ?uid=4 形式访问');
+                return;
+            }
+
+            // 2. 并行启动：在线 API（带 6s 超时）+ 本地数据库 + pic_link 映射
+            // 策略：先渲染本地数据让首屏秒出，在线 API 拿到后无感刷新
+            // 6s：服务端代理链（代理→直连）有重试，短超时会经常误杀
+            const onlinePromise = Promise.race([
+                fetchOnlineUserInfo(uid),
+                new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 6000))
+            ]);
+            const localPromise = loadUserLine(uid).catch(() => null);
+            const picMapPromise = loadPicLinkMap();
+
+            // 3. 等待本地数据（瞬间）→ 立即渲染
+            let localResult = await localPromise;
+            if (!localResult) {
+                // 本地也失败：等在线 API（最多再等 4s）
+                try {
+                    const onlineData = await onlinePromise;
+                    if (onlineData) {
+                        const picMap = await picMapPromise;
+                        renderFast(onlineData, picMap, 'online');
+                        return;
+                    }
+                } catch (e) { /* 忽略 */ }
+                setState('error', '加载失败', '本地档案与在线 API 均不可用');
+                return;
+            }
+            let data = localResult.data;
+            const picMap = await picMapPromise;
+            renderFast(data, picMap, 'local');
+
+            // 4. 后台等在线 API：拿到就无感刷新（与本地时间比较防止老数据覆盖新数据）
+            try {
+                const onlineData = await onlinePromise;
+                if (onlineData) {
+                    const onlineTs = onlineData._fetchedAt || Date.now();
+                    const localTs = data._fetchedAt || 0;
+                    if (onlineTs > localTs) {
+                        renderFast(onlineData, picMap, 'online');
+                    }
+                }
+            } catch (e) {
+                // 在线超时/失败：右上角已显示本地缓存，不动
+            }
+        }
+
+        // 渲染入口（首次或刷新都用同一个）
+        function renderFast(data, picMap, source) {
+            const DEFAULT_AVATAR = './asset/data/pic/defaultAvatar.jpg';
+            const DEFAULT_BG = './asset/data/pic/Default_background.jpg';
+            const avatarUrl = resolvePicValue(data.h, picMap) || DEFAULT_AVATAR;
+            const bgUrl = resolvePicValue(data.si, picMap) || DEFAULT_BG;
+            // 渲染前先清掉 loading 状态（renderUser 内部会重置 #app）
+            renderUser(data, avatarUrl, bgUrl);
+            setCachePill(source, data);
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', main);
+        } else {
+            main();
+        }
+    })();
+    </script>
+</body>
+</html>

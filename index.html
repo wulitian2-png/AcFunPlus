@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>AcfunPlus - 认真你就输啦 (・ω・)ノ- ( ゜- ゜)つロ</title>
+    <title>AcFunPlus - 认真你就输啦 (・ω・)ノ- ( ゜- ゜)つロ</title>
     <style>
         /* 全局重置 */
         * {
@@ -24,6 +24,14 @@
             align-items: center;
             justify-content: center;
             overflow-x: hidden;
+        }
+
+        /* 手机端取消垂直居中，让内容流式从顶部排列，并改为纯白背景避免白卡片边缘出现灰白条 */
+        @media (max-width: 720px) {
+            html,
+            body {
+                background: #ffffff;
+            }
         }
 
         /* 主容器 */
@@ -243,6 +251,7 @@
                 padding: 28px 24px;
                 border-radius: 18px;
                 box-shadow: 0 1px 8px rgba(0, 0, 0, 0.05);
+                border: 1px solid #f0f0f0;
             }
             .input-wrap input {
                 height: 52px;
@@ -290,7 +299,7 @@
     <div class="container">
         <!-- 头部 -->
         <div class="header">
-            <h1>AcfunPlus</h1>
+            <h1>AcFunPlus</h1>
             <p>认真你就输啦 (・ω・)ノ- ( ゜- ゜)つロ</p>
         </div>
         <div class="card">
@@ -303,7 +312,7 @@
             </div>
         </div>
         <div class="footer">
-            <a href="./version.html" class="pill-btn">v0.0.1.2</a>
+            <a href="./version.html" class="pill-btn">v0.0.2.2</a>
             <span class="dot"></span>
             <a href="./about.html" class="pill-btn">关于</a>
         </div>

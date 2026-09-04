@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="theme-color" content="#FD4C5B" />
-    <title>视频信息 - AcfunPlus</title>
+    <title>视频信息 - AcFunPlus</title>
     <style>
         /* ========== 全局重置 ========== */
         * {
@@ -195,6 +195,23 @@
             color: #ddd;
         }
 
+        /* 封面链接（点击在新窗口打开大图） */
+        .cover-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            min-height: inherit;
+            cursor: zoom-in;
+            text-decoration: none;
+            color: inherit;
+            line-height: 0;
+        }
+        .cover-link:hover img.loaded {
+            transform: scale(1.02);
+            opacity: 0.92;
+        }
+
         /* 视频内容区 */
         .video-body {
             padding: 28px;
@@ -322,6 +339,67 @@
         }
         .section-toggle:active {
             opacity: 0.7;
+        }
+
+        /* ========== 简介多版本横条 + 简介区 ========== */
+        .desc-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+        .desc-tab {
+            font-size: 12px;
+            font-weight: 500;
+            color: #666;
+            background: #f5f5f5;
+            border: 1px solid #eee;
+            border-radius: 999px;
+            padding: 4px 12px;
+            cursor: pointer;
+            user-select: none;
+            touch-action: manipulation;
+            -webkit-appearance: none;
+            transition: all 0.2s ease;
+        }
+        .desc-tab:hover {
+            background: #fff0f1;
+            border-color: #ffd0d4;
+            color: #FD4C5B;
+        }
+        .desc-tab.active {
+            background: #FD4C5B;
+            color: #fff;
+            border-color: #FD4C5B;
+        }
+        .desc-panels {
+            position: relative;
+        }
+        .desc-panel {
+            display: none;
+            position: relative;
+            background: #fafafa;
+            border: 1px solid #f0f0f0;
+            border-radius: 12px;
+            padding: 12px 14px 14px;
+        }
+        .desc-panel.active {
+            display: block;
+        }
+        .desc-panel .desc-text {
+            font-size: 14px;
+            line-height: 1.7;
+            color: #333;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .desc-panel .desc-cache {
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px dashed #eee;
+            text-align: right;
+            font-size: 11px;
+            color: #999;
         }
 
         /* ========== 数据来源链接（仿 about.html 的紧凑 link-card） ========== */
@@ -490,6 +568,103 @@
             color: #FD4C5B;
         }
 
+        /* ========== UP 主信息卡 ========== */
+        .up-block {
+            margin: 10px 0 16px;
+        }
+        .up-card {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+            padding: 8px 12px;
+            background: linear-gradient(135deg, #fff8f9 0%, #fff0f2 100%);
+            border-radius: 12px;
+            border: 1px solid rgba(253, 76, 91, 0.12);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+        .up-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(253, 76, 91, 0.1);
+            border-color: rgba(253, 76, 91, 0.3);
+        }
+        .up-card:active {
+            transform: translateY(0);
+        }
+        .up-card-link {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            text-decoration: none;
+            color: inherit;
+        }
+        .up-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #f0f2f5;
+            flex-shrink: 0;
+            border: 1.5px solid #fff;
+            box-shadow: 0 1px 4px rgba(253, 76, 91, 0.15);
+        }
+        .up-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .up-name-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .up-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #FD4C5B;
+            text-decoration: none;
+        }
+        .up-name:hover {
+            text-decoration: underline;
+        }
+        .up-uid {
+            font-size: 11px;
+            color: #888;
+            background: #f5f5f5;
+            padding: 1px 6px;
+            border-radius: 8px;
+        }
+        .up-signature {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.6;
+            margin: 6px 0 10px;
+            word-break: break-word;
+        }
+        .up-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 16px;
+            font-size: 12px;
+            color: #888;
+        }
+        .up-meta b {
+            color: #FD4C5B;
+            font-weight: 600;
+        }
+        .up-loading, .up-empty {
+            font-size: 13px;
+            color: #999;
+            padding: 12px 0;
+        }
+        .up-error {
+            font-size: 12px;
+            color: #b8860b;
+            background: #fff8e1;
+            padding: 6px 10px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
         /* ========== 未找到卡片 ========== */
         .not-found-card {
             display: flex;
@@ -599,10 +774,10 @@
             transform: scale(0.97);
         }
         .btn-sm {
-            height: 40px;
-            padding: 0 24px;
+            height: 44px;
+            padding: 0 28px;
             font-size: 14px;
-            border-radius: 20px;
+            border-radius: 22px;
         }
 
         /* ========== 底部 ========== */
@@ -615,8 +790,11 @@
             justify-content: center;
         }
         .pill-btn {
-            display: inline-block;
-            padding: 6px 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 40px;
+            padding: 0 22px;
             border: 2px solid #FD4C5B;
             border-radius: 9999px;
             color: #FD4C5B;
@@ -624,7 +802,6 @@
             font-weight: 500;
             text-decoration: none;
             background: transparent;
-            line-height: 1.5;
             transition: all 0.25s ease;
             cursor: pointer;
             user-select: none;
@@ -661,6 +838,13 @@
         /* ========== 响应式 ========== */
         /* 窄屏（手机）：纵向单列流，顺序与旧版一致（封面 → 标题 → 信息 → 简介/来源 → 统计） */
         @media (max-width: 767px) {
+            html, body {
+                background: #ffffff;
+                padding: 24px 0 40px;
+            }
+            .container {
+                gap: 18px;
+            }
             .video-body {
                 display: flex;
                 flex-direction: column;
@@ -794,6 +978,7 @@
             .stat-value {
                 font-size: 17px;
             }
+
             /* 状态卡（加载/未找到/错误）撑满容器，与 video-card 同款 */
             .not-found-card, .error-card, .loading-card {
                 max-width: none;
@@ -876,6 +1061,27 @@
             .stat-value {
                 font-size: 15px;
             }
+            .up-block {
+                margin: 8px 0 14px;
+            }
+            .up-card {
+                gap: 8px;
+                padding: 6px 10px;
+                border-radius: 10px;
+            }
+            .up-avatar {
+                width: 32px;
+                height: 32px;
+            }
+            .up-name {
+                font-size: 13px;
+            }
+            .up-signature {
+                font-size: 12px;
+            }
+            .up-meta {
+                font-size: 11px;
+            }
             .footer {
                 gap: 10px;
             }
@@ -922,7 +1128,7 @@
         <!-- 头部 -->
         <div class="header">
             <a href="./index.html">
-                <h1>AcfunPlus</h1>
+                <h1>AcFunPlus</h1>
             </a>
             <p>视频信息查询</p>
         </div>
@@ -948,6 +1154,11 @@
                     <h2 class="video-title" id="videoTitle">-</h2>
                 </div>
 
+                <!-- UP 主信息卡（u 字段，存在时通过 umanifest.json 加载用户数据） -->
+                <div class="up-block" id="upBlock" style="display:none;">
+                    <div class="up-card" id="upCard"></div>
+                </div>
+
                 <!-- 信息列表 -->
                 <div class="info-list" id="infoList"></div>
 
@@ -964,7 +1175,9 @@
                         <!-- 封面 -->
                         <div class="cover-wrap" id="coverWrap">
                             <div class="cover-placeholder" id="coverPlaceholder">暂无封面</div>
-                            <img id="coverImg" src="" alt="视频封面" style="display:none;" />
+                            <a id="coverLink" class="cover-link" target="_blank" rel="noopener noreferrer" style="display:none;">
+                                <img id="coverImg" src="" alt="视频封面" style="display:none;" />
+                            </a>
                         </div>
 
                         <!-- 数据统计 -->
@@ -1376,33 +1589,188 @@
             };
         }
 
+        // ==================== 简介多版本解析（j 字段） ====================
+        // 解析规则：
+        //   <v> 分隔多个简介版本（默认每版一个；单版本时等价于普通多行简介）
+        //   <c> 后跟缓存时间（任意一版可加，最多一个；多版本时横条显示这个时间）
+        // 例：
+        //   j=简介1正文<v简介2正文<c2024-01-15 10:30<v简介3正文
+        //   → 3 个版本，第 2 版有缓存时间 "2024-01-15 10:30"
+        function parseDescVersions(raw) {
+            if (!raw) return [];
+            // 先按 <v> 拆，每段内部可能含 <c> 缓存时间
+            const versions = [];
+            const parts = String(raw).split(/<v>/gi);
+            for (const part of parts) {
+                const seg = part.trim();
+                if (!seg) continue;
+                const cIdx = seg.search(/<c>/i);
+                if (cIdx >= 0) {
+                    versions.push({
+                        text: seg.slice(0, cIdx).trim(),
+                        cacheTime: seg.slice(cIdx + 3).trim()
+                    });
+                } else {
+                    versions.push({ text: seg, cacheTime: '' });
+                }
+            }
+            return versions;
+        }
+
+        // ==================== 渲染简介（支持多版本切换） ====================
+        // 单版本（无 <v>）：沿用原 renderTextBlock 行为
+        // 多版本：渲染横条列表 + 简介面板，点击横条切换激活的简介
+        function renderDescBlock(raw) {
+            const versions = parseDescVersions(raw);
+            if (versions.length === 0) {
+                const block = $('descBlock');
+                block.style.display = 'none';
+                return;
+            }
+
+            // 单版本且无 <c> 缓存时间标记 → 走原 renderTextBlock（多行折叠 + 展开按钮）
+            if (versions.length === 1 && !versions[0].cacheTime) {
+                renderTextBlock('descBlock', versions[0].text);
+                return;
+            }
+
+            // 多版本：重写 descBlock 内部结构
+            const block = $('descBlock');
+            block.innerHTML = `
+                <div class="section-label">简介</div>
+                <div class="desc-tabs"></div>
+                <div class="desc-panels"></div>
+            `;
+            const tabsEl = block.querySelector('.desc-tabs');
+            const panelsEl = block.querySelector('.desc-panels');
+
+            versions.forEach((v, i) => {
+                // 横条：显示缓存时间；无缓存时间时显示"版本 N"
+                const tabLabel = v.cacheTime || `版本 ${i + 1}`;
+                const tab = document.createElement('button');
+                tab.type = 'button';
+                tab.className = 'desc-tab' + (i === 0 ? ' active' : '');
+                tab.textContent = tabLabel;
+                tab.dataset.idx = String(i);
+                tab.onclick = () => {
+                    block.querySelectorAll('.desc-tab').forEach(t => t.classList.remove('active'));
+                    block.querySelectorAll('.desc-panel').forEach(p => p.classList.remove('active'));
+                    tab.classList.add('active');
+                    block.querySelector(`.desc-panel[data-idx="${i}"]`).classList.add('active');
+                };
+                tabsEl.appendChild(tab);
+
+                // 简介面板
+                const panel = document.createElement('div');
+                panel.className = 'desc-panel' + (i === 0 ? ' active' : '');
+                panel.dataset.idx = String(i);
+                // 右下角：缓存时间（只有当有缓存时间时才显示）
+                if (v.cacheTime) {
+                    panel.innerHTML = `
+                        <div class="desc-text"></div>
+                        <div class="desc-cache">缓存时间：${escapeHtml(v.cacheTime)}</div>
+                    `;
+                    panel.querySelector('.desc-text').textContent = v.text;
+                } else {
+                    panel.innerHTML = `<div class="desc-text"></div>`;
+                    panel.querySelector('.desc-text').textContent = v.text;
+                }
+                panelsEl.appendChild(panel);
+            });
+
+            block.style.display = '';
+        }
+
         // ==================== 代号表（asset/data/link.txt） ====================
-        // 代号表按段落隔离：无段头的行归入 [w] 段，[vp] 段单独存放
-        // w 字段只查 [w] 段（前缀替换），vp 字段只查 [vp] 段（整值精确匹配），代号互不串扰
+        // 代号表按段落隔离：无段头的行归入 [w] 段，[vp] / [p] 段单独存放
+        // w 字段只查 [w] 段（前缀替换），vp / p 字段查各自段（整值精确匹配），代号互不串扰
+        // 静态 fallback：file:// 协议下 fetch 会被浏览器拒绝，失败时回退到这份硬编码映射
+        const LINK_MAP_FALLBACK_TEXT = `①=http://www.acfun.cn/html
+②=http://www.acfun.cn/plus
+③=https://www.acfun.cn/a
+④=http://api.ivideo.sina.com.cn/
+⑤=http://124.228.254.229/html
+⑥=http://124.228.254.234/html
+⑦=http://220.170.79.48/html
+⑧=http://220.170.79.105/html
+⑨=http://220.170.79.109/html
+⑩=http://222.243.146.200/html
+✔=https://www.acfun.tv/html
+Ⅶ=https://tx-free-imgs.acfun.cn/
+×=https://tx-free-imgs.acfun.cn/
+[vp]
+😋=短篇
+😁=动画连载
+😂=周刊少年MAD
+`;
+
+        function parseLinkMapText(text) {
+            const maps = { w: {}, vp: {}, p: {} };
+            let section = 'w';
+            for (const line of text.split(/\r?\n/)) {
+                const t = line.trim();
+                if (!t || t.startsWith('#')) continue;
+                const sec = t.match(/^\[(\w+)\]$/);
+                if (sec) { section = sec[1]; continue; }
+                const idx = t.indexOf('=');
+                if (idx <= 0) continue;
+                const key = t.slice(0, idx).trim().replace(/^\uFEFF/, '');
+                const val = t.slice(idx + 1).trim();
+                if (key && val && maps[section]) maps[section][key] = val;
+            }
+            return maps;
+        }
+
         let linkMapPromise = null;
         function getLinkMap() {
             if (!linkMapPromise) {
                 linkMapPromise = fetch('asset/data/link.txt')
                     .then(r => r.ok ? r.text() : '')
-                    .then(text => {
-                        const maps = { w: {}, vp: {} };
-                        let section = 'w';
-                        for (const line of text.split(/\r?\n/)) {
-                            const t = line.trim();
-                            if (!t || t.startsWith('#')) continue;
-                            const sec = t.match(/^\[(\w+)\]$/);
-                            if (sec) { section = sec[1]; continue; }
-                            const idx = t.indexOf('=');
-                            if (idx <= 0) continue;
-                            const key = t.slice(0, idx).trim().replace(/^\uFEFF/, '');
-                            const val = t.slice(idx + 1).trim();
-                            if (key && val && maps[section]) maps[section][key] = val;
-                        }
-                        return maps;
-                    })
-                    .catch(() => ({ w: {}, vp: {} }));
+                    .then(text => text ? parseLinkMapText(text) : parseLinkMapText(LINK_MAP_FALLBACK_TEXT))
+                    .catch(() => parseLinkMapText(LINK_MAP_FALLBACK_TEXT));
             }
             return linkMapPromise;
+        }
+
+        // pic_link.txt 单独存储：用户数据行 h / si / afp / afm 字段的"数字代号 → 图片 URL"映射
+        // 静态 fallback：file:// 协议下 fetch 会被拒绝
+        const PIC_LINK_FALLBACK_TEXT = `1=./asset/data/pic/Pill.png
+2=./asset/data/pic/defaultAvatar.jpg
+3=./asset/data/pic/Default_background.jpg
+4=https://imgs.aixifan.com/lXmoRJ67F6-MrQ7Nf-rIVv2a-AZ7j6r-BJJzyq.png
+`;
+
+        function parsePicLinkText(text) {
+            const map = {};
+            for (const line of text.split(/\r?\n/)) {
+                const t = line.trim();
+                if (!t || t.startsWith('#') || t.startsWith('//')) continue;
+                if (/^\[\w+\]$/.test(t)) continue;
+                const idx = t.indexOf('=');
+                if (idx <= 0) continue;
+                const key = t.slice(0, idx).trim().replace(/^\uFEFF/, '');
+                const val = t.slice(idx + 1).trim();
+                if (key && val) map[key] = val;
+            }
+            return map;
+        }
+
+        let picLinkMapPromise = null;
+        function getPicLinkMap() {
+            if (!picLinkMapPromise) {
+                picLinkMapPromise = fetch('asset/data/pic_link.txt')
+                    .then(r => r.ok ? r.text() : '')
+                    .then(text => text ? parsePicLinkText(text) : parsePicLinkText(PIC_LINK_FALLBACK_TEXT))
+                    .catch(() => parsePicLinkText(PIC_LINK_FALLBACK_TEXT));
+            }
+            return picLinkMapPromise;
+        }
+
+        // 解析用户数据中的图片字段：数字 → URL；非数字直接返回原值
+        async function resolvePicValue(raw, picMap) {
+            if (!raw) return '';
+            if (picMap[raw]) return picMap[raw];
+            return raw; // 非数字（URL）原样返回
         }
 
         // 把条目开头的代号替换成 link.txt 里的前缀 URL（如 ①/jhua/1.html → http://www.acfun.cn/html/jhua/1.html）
@@ -1571,27 +1939,188 @@
             }
         }
 
+        // ==================== 加载用户数据 ====================
+        // 用户数据文件为明文 txt（asset/data/user/X-XXX.txt），通过 umanifest.json
+        // 索引定位 [start-end] 区间对应的文件路径，按行扫描匹配 [u=UID;...]
+        let userManifestPromise = null;
+        function loadUserManifest() {
+            if (!userManifestPromise) {
+                userManifestPromise = fetch('./asset/data/umanifest.json', { cache: 'no-store' })
+                    .then(r => r.ok ? r.text() : '')
+                    .then(text => {
+                        const entries = [];
+                        for (const line of text.split(/\r?\n/)) {
+                            const t = line.trim().replace(/^\uFEFF/, '');
+                            if (!t || t.startsWith('#') || t.startsWith('//')) continue;
+                            const m = t.match(/^(\d+)-(\d+)=(.+)$/);
+                            if (m) {
+                                entries.push({
+                                    start: parseInt(m[1], 10),
+                                    end: parseInt(m[2], 10),
+                                    path: m[3].trim()
+                                });
+                            }
+                        }
+                        entries.sort((a, b) => a.start - b.start);
+                        return entries;
+                    })
+                    .catch(() => []);
+            }
+            return userManifestPromise;
+        }
+
+        function findUserArchivePath(manifest, uid) {
+            for (const entry of manifest) {
+                if (uid >= entry.start && uid <= entry.end) return entry.path;
+            }
+            return null;
+        }
+
+        // 用户数据行解析：单行 [u=4;n=熊猫;...;v=0&1&2&3]
+        // 与视频行解析规则一致——以最后一个 ']' 作为结尾；'u=' 是第一个字段，
+        // 'v=' 的值可能含 '&' 不能用 ';' 截断，所以也按整段切到 ']' 为止
+        function parseUserLine(line) {
+            const data = {};
+            const end = line.lastIndexOf(']');
+            const body = end === -1 ? line : line.slice(0, end);
+
+            // 先把 u 字段整体切下来（u 是首字段）
+            const uMatch = body.match(/^\[?u=(\d+)/i);
+            if (uMatch) data.u = uMatch[1];
+
+            // 再扫剩余字段（除 u 外）
+            const regex = /\[?([a-z]+)=([^;\]]*)/gi;
+            let m;
+            while ((m = regex.exec(body)) !== null) {
+                const key = m[1].toLowerCase();
+                if (key === 'u') continue; // 已经处理过
+                const val = m[2].trim();
+                if (val !== '') data[key] = val;
+            }
+            return data;
+        }
+
+        // 加载单个用户 txt 并匹配给定 UID
+        async function loadUserData(uid) {
+            const manifest = await loadUserManifest();
+            if (manifest.length === 0) return { error: 'umanifest.json 为空或加载失败' };
+
+            const path = findUserArchivePath(manifest, uid);
+            if (!path) return { error: `UID ${uid} 不在索引范围内` };
+
+            let text;
+            try {
+                const res = await fetchWithTimeout('./' + path.replace(/^\.?\//, ''), { cache: 'no-store' }, 15000);
+                if (!res.ok) return { error: `用户数据文件加载失败: HTTP ${res.status}` };
+                text = await res.text();
+            } catch (e) {
+                return { error: `用户数据文件请求失败: ${e.message}` };
+            }
+
+            const lines = text.split(/\r?\n/);
+            for (const line of lines) {
+                const t = line.trim();
+                if (!t) continue;
+                const m = t.match(/^\[u=(\d+)/i);
+                if (m && parseInt(m[1], 10) === uid) {
+                    return { data: parseUserLine(t) };
+                }
+            }
+            return { error: `未找到 UID ${uid} 的记录` };
+        }
+
+        // ==================== 渲染 UP 主信息卡 ====================
+        // uVal：来自视频数据行的 u 字段（如 "4" 或 "4;熊猫"——后者兜底显示用）
+        async function renderUserBlock(uVal) {
+            const block = $('upBlock');
+            const card = $('upCard');
+            card.innerHTML = '';
+            block.style.display = 'none';
+
+            if (!uVal) return;
+
+            // u 字段可能是纯 UID（如 "4"）也可能是 "uid;昵称" 兼容写法
+            const segs = uVal.split(';').map(s => s.trim());
+            const uid = parseInt(segs[0], 10);
+            if (!uid || isNaN(uid)) {
+                card.innerHTML = `<div class="up-empty">UP 主 UID 无效（u=${escapeHtml(uVal)}）</div>`;
+                block.style.display = '';
+                return;
+            }
+
+            // 先显示加载态
+            card.innerHTML = `<div class="up-loading">正在加载 UP 主信息（UID ${uid}）...</div>`;
+            block.style.display = '';
+
+            const result = await loadUserData(uid);
+            if (result.error) {
+                card.innerHTML = `<div class="up-error">⚠ ${escapeHtml(result.error)}</div>`;
+                return;
+            }
+
+            const u = result.data;
+            const nickname = u.n || segs[1] || `UID ${uid}`;
+            const DEFAULT_AVATAR = './asset/data/pic/defaultAvatar.jpg';
+            // ac.html 仅展示头像+昵称，详细界面在 user.html
+            const homeUrl = `./user.html?uid=${uid}`;
+
+            // 数字代号 → URL：h / afp / afm 在 pic_link.txt 里查表
+            const picMap = await getPicLinkMap();
+            const avatarUrl = await resolvePicValue(u.h || '', picMap) || DEFAULT_AVATAR;
+
+            card.innerHTML = `
+                <a class="up-card-link" href="${escapeAttr(homeUrl)}" title="查看 ${escapeAttr(nickname)} 的详细信息">
+                    <img class="up-avatar" src="${escapeAttr(avatarUrl)}" alt="${escapeAttr(nickname)}的头像"
+                         onerror="this.onerror=null;this.src='${escapeAttr(DEFAULT_AVATAR)}'" />
+                    <div class="up-info">
+                        <div class="up-name-row">
+                            <span class="up-name">${escapeHtml(nickname)}</span>
+                            <span class="up-uid">UID ${uid}</span>
+                        </div>
+                    </div>
+                </a>
+            `;
+        }
+
+        // HTML 转义工具
+        function escapeHtml(str) {
+            return String(str ?? '').replace(/[&<>"']/g, c => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[c]));
+        }
+        function escapeAttr(str) {
+            return escapeHtml(str);
+        }
+
         // ==================== 渲染视频信息 ====================
         async function renderVideoInfo(data, acNum) {
             $('acBadge').textContent = 'ac' + acNum;
 
             $('videoTitle').textContent = data.t || '无标题';
 
-            // 封面
+            // 封面（cl 字段：link.txt [w] 段里的代号前缀替换，如 ×/Ⅶ→https://tx-free-imgs.acfun.cn/）
             const coverImg = $('coverImg');
             const coverPlaceholder = $('coverPlaceholder');
-            if (data.cl) {
-                coverImg.src = data.cl;
-                coverImg.style.display = 'block';
+            const coverLink = $('coverLink');
+            const linkMap = await getLinkMap();
+            const clRaw = data.cl || '';
+            const clResolved = clRaw ? resolveSourceEntry(clRaw, linkMap.w) : '';
+            if (clResolved) {
+                coverLink.href = clResolved;
+                coverLink.style.display = '';  // 用 CSS 的 .cover-link 默认 flex
+                coverImg.src = clResolved;
+                coverImg.style.display = '';
                 coverPlaceholder.style.display = 'none';
                 coverImg.classList.remove('loaded');
                 coverImg.onload = () => coverImg.classList.add('loaded');
                 coverImg.onerror = () => {
                     coverImg.style.display = 'none';
+                    coverLink.style.display = 'none';
                     coverPlaceholder.style.display = '';
                     coverPlaceholder.textContent = '封面加载失败';
                 };
             } else {
+                coverLink.style.display = 'none';
                 coverImg.style.display = 'none';
                 coverPlaceholder.style.display = '';
                 coverPlaceholder.textContent = '暂无封面';
@@ -1618,11 +2147,11 @@
                 { key: 'vp', label: '视频分区', value: vpValue, hideIfEmpty: true },
             ];
 
-            if (data.cl) {
+            if (clResolved) {
                 items.push({
                     key: 'cl',
                     label: '封面链接',
-                    value: `<a href="${data.cl}" target="_blank" rel="noopener noreferrer">${data.cl}</a>`,
+                    value: `<a href="${clResolved}" target="_blank" rel="noopener noreferrer">${clResolved}</a>`,
                     isHtml: true
                 });
             }
@@ -1636,11 +2165,14 @@
             }
 
             // 简介（j）与数据来源（w）
-            renderTextBlock('descBlock', data.j);
+            renderDescBlock(data.j);
             await renderSourceBlock(data.w);
 
             // 分P列表（p）
             renderPartsBlock(data.p);
+
+            // UP 主信息（u 字段，异步加载，不阻塞主流程）
+            renderUserBlock(data.u);
 
             // Tag
             if (data.ta) {

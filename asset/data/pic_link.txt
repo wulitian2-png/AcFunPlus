@@ -1,0 +1,17 @@
+# pic_link.txt — 数字代号 → 图片 URL 映射表
+# 用户数据行 (user/X-XXX.txt) 里的 h / si / afp / afm 字段值为数字代号时，
+# 在此解析为对应的图片 URL。非数字（即原 URL）直接显示，不查此表。
+#
+# 段头 [p] 表示 pic 段，与 link.txt 的 [w] / [vp] 段互不串扰。
+#
+# 编号	含义
+# 2	默认头像（./asset/data/pic/defaultAvatar.jpg）
+# 3	默认空间背景图（./asset/data/pic/Default_background.jpg）
+# 1	头像框PC（https://imgs.aixifan.com/lhBM1b95sZ-2I7FRf-ZBBVFf-rMnAzu-7Nfeye.png）
+# 4	头像框手机（https://imgs.aixifan.com/lXmoRJ67F6-MrQ7Nf-rIVv2a-AZ7j6r-BJJzyq.png）
+
+[p]
+1=https://imgs.aixifan.com/lhBM1b95sZ-2I7FRf-ZBBVFf-rMnAzu-7Nfeye.png
+2=./asset/data/pic/defaultAvatar.jpg
+3=./asset/data/pic/Default_background.jpg
+4=https://imgs.aixifan.com/lXmoRJ67F6-MrQ7Nf-rIVv2a-AZ7j6r-BJJzyq.png
