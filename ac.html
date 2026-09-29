@@ -1381,59 +1381,144 @@
             }
         }
 
-        // ==================== 加载 libarchive ====================
-        async function loadLibarchive() {
-            const basePath = './asset/libarchive';
-            const wasmUrl = `${basePath}/libarchive.wasm`;
-            const workerUrl = `${basePath}/worker-bundle.js`;
-            const moduleUrl = `${basePath}/Slibarchive.js`;
-
-            // 尝试 1：ES Module 动态导入
-            try {
-                const mod = await import(moduleUrl);
-                const Archive = mod.Archive || mod.default?.Archive || mod.libarchive?.Archive;
-                if (Archive) {
-                    if (Archive.init) {
-                        await Archive.init({ workerUrl, wasmUrl });
-                    }
-                    return Archive;
-                }
-            } catch (e) {
-                console.warn('ES Module import failed:', e.message);
-            }
-
-            // 尝试 2：Script 标签加载（UMD）
-            return new Promise((resolve, reject) => {
-                // 如果已经加载过，直接返回
-                if (window.Archive || window.libarchive?.Archive) {
-                    const Archive = window.Archive || window.libarchive.Archive;
-                    if (Archive.init) {
-                        Archive.init({ workerUrl, wasmUrl }).then(() => resolve(Archive)).catch(reject);
-                    } else {
-                        resolve(Archive);
-                    }
-                    return;
-                }
-
-                const script = document.createElement('script');
-                script.src = moduleUrl;
-                script.onload = () => {
-                    const Archive = window.Archive || window.libarchive?.Archive;
-                    if (!Archive) {
-                        reject(new Error('libarchive.js 加载后未找到 Archive 对象'));
-                        return;
-                    }
-                    if (Archive.init) {
-                        Archive.init({ workerUrl, wasmUrl })
-                            .then(() => resolve(Archive))
-                            .catch(reject);
-                    } else {
-                        resolve(Archive);
-                    }
+        // ==================== 数据分片：fetch 文本 + IndexedDB 缓存 + 二分查找 ====================
+        // 数据已预排序为纯文本（每行一条记录 [i=编号;...]），无需在浏览器解压 7z / 加载 wasm
+        const CHUNK_DB = 'acfunplus-chunks';
+        let _idbPromise = null;
+        function openChunkDB() {
+            if (_idbPromise) return _idbPromise;
+            _idbPromise = new Promise((resolve, reject) => {
+                if (!('indexedDB' in window)) { reject(new Error('浏览器不支持 IndexedDB')); return; }
+                const req = indexedDB.open(CHUNK_DB, 2);
+                req.onupgradeneeded = () => {
+                    const db = req.result;
+                    // 升级时若 store 已存在（旧版本建过），先删后建，确保干净空 store
+                    if (db.objectStoreNames.contains('chunks')) db.deleteObjectStore('chunks');
+                    db.createObjectStore('chunks', { keyPath: 'path' });
                 };
-                script.onerror = () => reject(new Error('无法加载 libarchive.js'));
-                document.head.appendChild(script);
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
             });
+            return _idbPromise;
+        }
+        // 缓存自愈：若缓存内容不是合法数据（例如旧版本解压失败留下的乱码），视为未命中，强制重新下载
+        function isValidChunk(obj) {
+            return obj && typeof obj.text === 'string' && obj.text.indexOf('[i=') !== -1;
+        }
+        async function getCachedChunk(path) {
+            try {
+                const db = await openChunkDB();
+                const obj = await new Promise((resolve, reject) => {
+                    const tx = db.transaction('chunks', 'readonly');
+                    const r = tx.objectStore('chunks').get(path);
+                    r.onsuccess = () => resolve(r.result || null);
+                    r.onerror = () => reject(r.error);
+                });
+                return isValidChunk(obj) ? obj : null;
+            } catch (_) { return null; }
+        }
+        async function putCachedChunk(path, text, etag) {
+            try {
+                const db = await openChunkDB();
+                await new Promise((resolve, reject) => {
+                    const tx = db.transaction('chunks', 'readwrite');
+                    tx.objectStore('chunks').put({ path, text, etag: etag || null });
+                    tx.oncomplete = () => resolve();
+                    tx.onerror = () => reject(tx.error);
+                });
+            } catch (_) { /* 缓存失败不影响查询 */ }
+        }
+        // 按扩展名识别压缩格式，用浏览器原生 DecompressionStream 解压（无需 wasm / 第三方库）
+        // 注意：brotli 格式在 DecompressionStream 中的支持度不如 gzip 普遍，本仓库统一用 gzip。
+        // 解压失败时直接抛错（交由上层显示错误卡片），不再静默回退成明文导致"查不到"。
+        async function decompressBuffer(bytes, path) {
+            let fmt = null;
+            if (path.endsWith('.br')) fmt = 'brotli';
+            else if (path.endsWith('.gz')) fmt = 'gzip';
+            if (!fmt) return new TextDecoder('utf-8').decode(bytes); // 明文
+            if (typeof DecompressionStream === 'undefined') {
+                throw new Error('当前浏览器不支持原生解压（DecompressionStream），无法读取压缩数据分片，请升级浏览器');
+            }
+            let text;
+            try {
+                const ds = new DecompressionStream(fmt);
+                const writer = ds.writable.getWriter();
+                writer.write(bytes);
+                writer.close();
+                text = await new Response(ds.readable).text();
+            } catch (e) {
+                throw new Error('数据分片解压失败（' + fmt + '）：' + e.message);
+            }
+            if (text.charCodeAt(0) !== 91) { // 数据行必须以 '[' 开头，否则视为解压异常
+                throw new Error('数据分片解压后格式异常（首字符不是 [），可能文件损坏或服务器未正确返回压缩数据');
+            }
+            return text;
+        }
+        async function fetchChunkText(path, onProgress) {
+            const cached = await getCachedChunk(path);
+            const headers = {};
+            if (cached && cached.etag) headers['If-None-Match'] = cached.etag;
+            const response = await fetchWithTimeout(path, { cache: 'no-cache', headers }, 60000);
+            // 数据未变更：直接复用本地缓存（秒开）
+            if (response.status === 304 && cached) {
+                onProgress && onProgress(85, '命中本地缓存');
+                return cached.text;
+            }
+            if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            const contentLength = response.headers.get('content-length');
+            let text;
+            if (contentLength && response.body && response.body.getReader) {
+                const total = parseInt(contentLength, 10);
+                const reader = response.body.getReader();
+                const chunks = [];
+                let received = 0;
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    chunks.push(value);
+                    received += value.length;
+                    const pct = Math.floor((received / total) * 55) + 20; // 20-75%
+                    onProgress && onProgress(pct, `${(received / 1024 / 1024).toFixed(1)} MB / ${(total / 1024 / 1024).toFixed(1)} MB`);
+                }
+                const all = new Uint8Array(received);
+                let pos = 0;
+                for (const c of chunks) { all.set(c, pos); pos += c.length; }
+                text = await decompressBuffer(all, path);
+            } else {
+                text = await decompressBuffer(new Uint8Array(await response.arrayBuffer()), path);
+            }
+            onProgress && onProgress(80, '已下载，写入缓存');
+            putCachedChunk(path, text, response.headers.get('etag')); // 异步，不阻塞渲染
+            return text;
+        }
+        // 从行首 [i=数字; 提取 ac 号（比正则更快，二分查找每一步都会调用）
+        function lineAcValue(line) {
+            if (line.length < 4 || line.charCodeAt(0) !== 91) return -1; // 不是 '['
+            if (line.charCodeAt(1) !== 105 || line.charCodeAt(2) !== 61) return -1; // 不是 'i='
+            let num = 0, i = 3;
+            while (i < line.length) {
+                const ch = line.charCodeAt(i);
+                if (ch < 48 || ch > 57) break;
+                num = num * 10 + (ch - 48);
+                i++;
+            }
+            return num;
+        }
+        // 在已排序的文本分片里二分查找目标 ac 号；未命中再线性兜底（兼容异常数据）
+        function searchInText(text, acNum) {
+            const lines = text.split(/\r?\n/);
+            let lo = 0, hi = lines.length - 1, found = -1;
+            while (lo <= hi) {
+                const mid = (lo + hi) >> 1;
+                const v = lineAcValue(lines[mid]);
+                if (v === acNum) { found = mid; break; }
+                if (v < acNum) lo = mid + 1; else hi = mid - 1;
+            }
+            if (found >= 0) return parseVideoLine(lines[found]);
+            for (const line of lines) {
+                if (lineAcValue(line) === acNum) return parseVideoLine(line);
+            }
+            return null;
         }
 
         // ==================== 加载并解析 manifest ====================
@@ -1469,86 +1554,8 @@
         }
 
         // ==================== 解压 7z 并搜索数据 ====================
-        async function extractAndSearch(buffer, acNum) {
-            const Archive = await loadLibarchive();
-
-            setLoading('正在解压数据...', '这可能需要几秒钟', 30);
-
-            // 打开压缩包 —— libarchive.js 的 _loadFile 内部调用 e.arrayBuffer()，
-            // 只有 File / Blob 才有这个方法（旧版 Uint8Array 没有）。
-            // 所以必须传 Blob，绝不能传 Uint8Array。
-            let archive;
-            try {
-                const blob = new Blob([buffer], { type: 'application/octet-stream' });
-                archive = await Archive.open(blob);
-            } catch (e1) {
-                console.warn('Blob open failed:', e1.message);
-                throw new Error(`无法打开压缩包: ${e1.message}`);
-            }
-
-            const targetPrefix = `[i=${acNum};`;
-            const targetPrefix2 = `[i=${acNum}`;
-
-            try {
-                // getFilesArray() 只读压缩包头（不解压数据），
-                // 返回的是 [{ file: R实例, path }] 包装对象，需要解包取 .file
-                const entries = await archive.getFilesArray();
-                const txtEntries = entries.filter(
-                    en => en && en.file && typeof en.file.name === 'string' && en.file.name.endsWith('.txt')
-                );
-
-                setLoading('正在查找视频信息...', `共 ${txtEntries.length} 个数据文件`, 40);
-
-                let scanned = 0;
-                for (const en of txtEntries) {
-                    scanned++;
-                    setLoading(
-                        '正在查找视频信息...',
-                        `扫描文件: ${en.file.name} (${scanned}/${txtEntries.length})`,
-                        40 + Math.floor((scanned / Math.max(1, txtEntries.length)) * 50)
-                    );
-
-                    let text = '';
-                    try {
-                        // R.extract() 返回 File 对象
-                        const extracted = await en.file.extract();
-                        if (extracted != null) {
-                            if (typeof extracted.text === 'function') {
-                                text = await extracted.text();
-                            } else if (extracted instanceof Uint8Array || extracted instanceof ArrayBuffer) {
-                                const buf = extracted instanceof ArrayBuffer ? new Uint8Array(extracted) : extracted;
-                                text = new TextDecoder('utf-8').decode(buf);
-                            } else if (typeof extracted === 'string') {
-                                text = extracted;
-                            } else if (extracted instanceof Blob) {
-                                text = await extracted.text();
-                            } else {
-                                text = String(extracted);
-                            }
-                        }
-                    } catch (extractErr) {
-                        console.warn(`提取 ${en.file.name} 失败:`, extractErr);
-                        continue;
-                    }
-
-                    if (!text) continue;
-
-                    for (const line of text.split(/\r?\n/)) {
-                        if (line.includes(targetPrefix) || line.includes(targetPrefix2)) {
-                            const parsed = parseVideoLine(line);
-                            if (parsed.i === String(acNum)) {
-                                return parsed;
-                            }
-                        }
-                    }
-                }
-
-                return null;
-            } finally {
-                // extract() 依赖 worker，必须等全部提取完才能关闭
-                try { archive.close && await archive.close(); } catch (_) { }
-            }
-        }
+        // 该能力已被下方「fetch 文本 + 二分查找 + IndexedDB 缓存」方案取代（见 searchInText / fetchChunkText），
+        // 不再需要在浏览器内加载 libarchive.wasm 解压 7z。
 
         // ==================== 渲染简介文本块（j 字段） ====================
         // 数据行内用 <v> 表示换行，这里转成真实换行渲染
@@ -2256,48 +2263,15 @@
                     return;
                 }
 
-                setLoading('正在下载数据文件...', archivePath, 20);
-                let buffer;
-                try {
-                    const response = await fetchWithTimeout(archivePath, { cache: 'no-store' }, 60000);
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                    }
-                    const contentLength = response.headers.get('content-length');
-                    if (contentLength) {
-                        const total = parseInt(contentLength, 10);
-                        const reader = response.body.getReader();
-                        const chunks = [];
-                        let received = 0;
-                        while (true) {
-                            const { done, value } = await reader.read();
-                            if (done) break;
-                            chunks.push(value);
-                            received += value.length;
-                            const pct = Math.floor((received / total) * 10) + 20; // 20-30%
-                            setLoading('正在下载数据文件...', `${(received/1024/1024).toFixed(1)} MB / ${(total/1024/1024).toFixed(1)} MB`, pct);
-                        }
-                        const allChunks = new Uint8Array(received);
-                        let position = 0;
-                        for (const chunk of chunks) {
-                            allChunks.set(chunk, position);
-                            position += chunk.length;
-                        }
-                        buffer = allChunks.buffer;
-                    } else {
-                        buffer = await response.arrayBuffer();
-                    }
-                } catch (e) {
-                    showError('数据文件下载失败', `${archivePath}`, e.message);
-                    return;
-                }
-
+                setLoading('正在加载数据分片...', archivePath, 20);
                 let videoData;
                 try {
-                    videoData = await extractAndSearch(buffer, acNum);
+                    const text = await fetchChunkText(archivePath, (pct, msg) => setLoading('正在加载数据分片...', msg, pct));
+                    setLoading('正在查找视频信息...', '二分查找', 80);
+                    videoData = searchInText(text, acNum);
                 } catch (e) {
                     console.error(e);
-                    showError('解压或解析失败', e.message, '请检查浏览器是否支持 WebAssembly，或 libarchive 文件是否完整');
+                    showError('数据加载或解析失败', e.message, '请检查网络，或数据分片文件是否完整');
                     return;
                 }
 
