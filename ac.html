@@ -278,6 +278,43 @@
         .info-item .value a:hover {
             text-decoration: underline;
         }
+        /* 来源字段卡：值 +「复制链接」并排。只给带链接的字段加这个类，
+           其它字段卡仍是普通块级文本，不受影响 */
+        .info-item .value.value-with-copy {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .info-item .value.value-with-copy a {
+            min-width: 0;
+        }
+        .copy-link-btn {
+            flex: none;
+            font-family: inherit;
+            font-size: 11px;
+            font-weight: 500;
+            line-height: 1;
+            letter-spacing: 0.3px;
+            padding: 4px 9px;
+            border-radius: 6px;
+            border: 1px solid #f6ccd1;
+            background: #fff6f7;
+            color: #FD4C5B;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            transition: background 0.15s, color 0.15s, border-color 0.15s;
+        }
+        .copy-link-btn:hover {
+            background: #FD4C5B;
+            border-color: #FD4C5B;
+            color: #fff;
+        }
+        .copy-link-btn.copied {
+            background: #2a7d2a;
+            border-color: #2a7d2a;
+            color: #fff;
+        }
 
         /* ========== 简介 / 数据来源文本块 ========== */
         .section-block {
@@ -490,6 +527,15 @@
         .part-vid b {
             color: #666;
             font-weight: 500;
+        }
+        /* 分P 里的来源 id：做成链接，交互与「数据来源」一致（新标签页打开 + hover 下划线） */
+        .part-vid a {
+            color: #FD4C5B;
+            text-decoration: none;
+            word-break: break-all;
+        }
+        .part-vid a:hover {
+            text-decoration: underline;
         }
         .part-item.extra {
             display: none;
@@ -1330,6 +1376,22 @@
                 }
             }
 
+            // st（直传）是「无等号的独立标记」：记录里单独放一个 st 即可，出现就
+            // 代表该视频是直传（站内直接上传），不写 '='，也不带值。
+            //   [i=8;c=2007-06-07;t=xxx;h=...;w=①/xxx;st;j=...]
+            //   [i=8;c=2007-06-07;t=xxx;h=...;w=①/xxx;v=641470;st]
+            // 早期直传视频没有 vi，用 st 标记来源类型；它与 v/vi/y 是两个维度，可并存。
+            // 必须放在 p 解析和「兜底简介」之前：p 的截断只认 ';key='（带等号），
+            // st 若跟在 p 后面会被并进 p 的值里；放到最后又会被当成简介正文。
+            // 定界只认 ; [ 或行尾，所以字段值里出现的 st（如 t=st）不会被误判。
+            const stMatch = head.match(/(?:^|\[|;)(st)(?=;|\[|$)/i);
+            if (stMatch) {
+                data.st = '1';
+                // 连同前面的分隔符一起摘掉，避免在 p 值后面留下多余的 ';;'
+                head = head.slice(0, stMatch.index)
+                     + head.slice(stMatch.index + stMatch[0].length);
+            }
+
             // p（分P）字段：值为 1@t=第一话@v=641470<v>2@t=第二话 格式。
             // 里面的 @v=、@t= 是分P子字段，不能让上面的正则把它们当顶层字段解析
             // （否则 t/v/y 会被分P的子字段覆盖），所以要先整体摘出再解析。
@@ -1597,17 +1659,27 @@
         }
 
         // ==================== 简介多版本解析（j 字段） ====================
-        // 解析规则：
-        //   <v> 分隔多个简介版本（默认每版一个；单版本时等价于普通多行简介）
-        //   <c> 后跟缓存时间（任意一版可加，最多一个；多版本时横条显示这个时间）
-        // 例：
-        //   j=简介1正文<v简介2正文<c2024-01-15 10:30<v简介3正文
-        //   → 3 个版本，第 2 版有缓存时间 "2024-01-15 10:30"
+        // j 里的 <v> 历史上被当成两种东西用，靠 <c> 区分：
+        //   ① 换行符 —— 存量数据的主流用法（8,700+ 条，且常成对出现 <v><v> 表示空行）。
+        //      没有 <c> 时，一律把 <v> 当换行，整体作为「单版本」交给 renderTextBlock。
+        //   ② 版本分隔 —— 同一视频被多次抓取、简介改过时才有。出现 <c> 缓存时间标记才启用，
+        //      此时 <v> 才是版本分隔符。
+        // 这样两种写法都能正确渲染：存量数据不会再把一段简介误拆成「版本1/版本2…」。
+        // 例（②）：j=简介1正文<v>简介2正文<c>2024-01-15 10:30<v>简介3正文
+        //          → 3 个版本，第 2 版带缓存时间
         function parseDescVersions(raw) {
             if (!raw) return [];
-            // 先按 <v> 拆，每段内部可能含 <c> 缓存时间
+            const s = String(raw);
+
+            // ① 没有 <c>：<v> 就是换行。逐行 trim 后拼回，空行（<v><v>）自然保留。
+            if (!/<c>/i.test(s)) {
+                const text = s.split(/<v>/gi).map(l => l.trim()).join('\n').trim();
+                return text ? [{ text: text, cacheTime: '' }] : [];
+            }
+
+            // ② 有 <c>：按 <v> 拆版本，每段内部可能含 <c> 缓存时间
             const versions = [];
-            const parts = String(raw).split(/<v>/gi);
+            const parts = s.split(/<v>/gi);
             for (const part of parts) {
                 const seg = part.trim();
                 if (!seg) continue;
@@ -1789,6 +1861,94 @@
             return best ? linkMap[best] + entry.slice(best.length) : entry;
         }
 
+        // ==================== 来源字段 → 该源站视频页 URL ====================
+        // 写法约定：来源字段的值只存「该站自己的 id」，不存整条 URL；跳转地址由下面的模板拼出。
+        //   y    优酷vid    → https://v.youku.com/v_show/id_{id}.html
+        //   qq   腾讯源     → https://v.qq.com/x/page/{id}.html
+        //   yt   YouTube源  → https://www.youtube.com/watch?v={id}
+        //   nico nico源     → https://www.nicovideo.jp/watch/{id}
+        //   lin  其他源     → 值本身就是完整链接，直接当 href 用
+        //   td   土豆源     → 土豆无可用详情页，只显示 id，不挂链接
+        //   v / vi / st     → 同样没有可跳转的视频页模板，按纯文本展示
+        // 返回 null = 该字段不生成超链接。
+        function sourceFieldUrl(key, value) {
+            const v = String(value == null ? '' : value).trim();
+            if (!v) return null;
+            switch (String(key || '').toLowerCase()) {
+                case 'y':
+                    return 'https://v.youku.com/v_show/id_' + v + '.html';
+                case 'qq':
+                    return 'https://v.qq.com/x/page/' + v + '.html';
+                case 'yt':
+                    return 'https://www.youtube.com/watch?v=' + v;
+                case 'nico':
+                    // nico 的 watch 号带 sm 前缀；只写了纯数字时补上（早期号段）
+                    return 'https://www.nicovideo.jp/watch/' + (/^\d+$/.test(v) ? 'sm' + v : v);
+                case 'lin':
+                    // 其他源存的就是链接本身（无协议时补 https://）
+                    if (/^(https?:\/\/|mailto:)/i.test(v)) return v;
+                    return /^[^\s/@]+\.[^\s/@]+/.test(v) ? 'https://' + v : null;
+                default:
+                    // 含 td（土豆）：只显示 id，不生成链接
+                    return null;
+            }
+        }
+
+        // 把值渲染成「数据来源」那种可点链接（形状同 .source-link 的交互：新标签页打开）
+        function makeValueLink(url, text) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            a.textContent = text;
+            a.title = url;
+            return a;
+        }
+
+        // 复制文本到剪贴板：优先 Clipboard API；非安全上下文（file:// 打开）会抛错，
+        // 退回到临时 textarea + execCommand 的老办法。
+        async function copyText(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                return true;
+            } catch (e) {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.setAttribute('readonly', '');
+                ta.style.position = 'fixed';
+                ta.style.top = '-1000px';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                let ok = false;
+                try { ok = document.execCommand('copy'); } catch (e2) { ok = false; }
+                ta.remove();
+                return ok;
+            }
+        }
+
+        // 「复制链接」按钮：复制的是**跳转地址**（不是卡里显示的 id），
+        // 点完短暂变成「已复制」再复原。只有能拼出链接的来源字段才会挂这个按钮。
+        function makeCopyLinkBtn(url) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'copy-link-btn';
+            btn.textContent = '复制链接';
+            btn.title = '复制链接：' + url;
+            btn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const ok = await copyText(url);
+                btn.textContent = ok ? '已复制' : '复制失败';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = '复制链接';
+                    btn.classList.remove('copied');
+                }, 1200);
+            });
+            return btn;
+        }
+
         // ==================== 渲染数据来源链接列表（w 字段） ====================
         // 每条 <v> 分隔的来源先做代号替换，再渲染成可点击的紧凑链接卡片；
         // 超过 2 条折叠，非链接文本原样展示为灰色卡片
@@ -1860,16 +2020,30 @@
             const toggleBtn = block.querySelector('.parts-toggle');
             const MAX_PARTS = 6;
 
-            // 子字段名 → 显示名
-            const subLabels = { v: '新浪', vi: 'AcFun', y: '优酷', c: '投稿', h: '缓存' };
+            // 子字段名 → 显示名。st 是无值标记（直传），只显示名字不带值
+            const subLabels = {
+                v: '新浪', vi: 'AcFun', y: '优酷', td: '土豆', c: '投稿', h: '缓存',
+                qq: '腾讯', yt: 'YouTube', nico: 'nico', lin: '其他', st: '直传'
+            };
+            const FLAG_SUBS = { st: true };
 
             parts.forEach((raw, idx) => {
                 const item = document.createElement('div');
                 item.className = 'part-item' + (idx >= MAX_PARTS ? ' extra' : '');
 
+                // @st（无等号）是分P级的直传标记：先摘出来，避免它被当成标题或
+                // 混进相邻子字段的值。定界只认 @ 或行尾，所以 @stop 之类不会误判。
+                let partSt = false;
+                const stm = /@st(?=@|$)/i.exec(raw);
+                if (stm) {
+                    partSt = true;
+                    raw = raw.slice(0, stm.index) + raw.slice(stm.index + stm[0].length);
+                }
+
                 // 子字段分隔符只认 '@key=' 形态；'@' 后面不是 '字母=' 的属于正文
                 // （标题可含 @，如邮箱 a@b.com）
                 const sub = {};
+                if (partSt) sub.st = '1';
                 let indexPart, rest;
 
                 if (/^[a-z]+=/i.test(raw)) {
@@ -1925,8 +2099,18 @@
                         const b = document.createElement('b');
                         b.textContent = label;
                         s.appendChild(b);
-                        s.appendChild(document.createTextNode(' ' + sub[k]));
-                        s.title = sub[k];
+                        // st 是无值标记，只显示「直传」，不追加值
+                        if (!FLAG_SUBS[k]) {
+                            // 来源类子字段：能拼出视频页的（y/qq/yt/nico/lin）渲染成超链接，
+                            // td（土豆）与 v/vi 无模板，退化为纯文本
+                            const partHref = sourceFieldUrl(k, sub[k]);
+                            s.appendChild(document.createTextNode(' '));
+                            if (partHref) s.appendChild(makeValueLink(partHref, sub[k]));
+                            else s.appendChild(document.createTextNode(sub[k]));
+                            s.title = sub[k];
+                        } else {
+                            s.title = label;
+                        }
                         vids.appendChild(s);
                     }
                 }
@@ -2148,9 +2332,25 @@
                 { key: 'i', label: 'Ac号', value: 'ac' + acNum, always: true },
                 { key: 'c', label: '投稿时间', value: formatTime(data.c), hideIfEmpty: true },
                 { key: 'h', label: '缓存信息', value: formatTime(data.h), hideIfEmpty: true },
+                // 来源字段族（带 link:true 的会把「id」渲染成超链接，URL 模板见 sourceFieldUrl）：
+                //   ① 历史 vid 字段（现有数据在用的）：v=新浪vid、vi=AcFun vid、
+                //      y=优酷vid（即「优酷源」，历史命名，沿用不改）→ v.youku.com/v_show/id_{id}.html
+                //   ② 按源站划分的来源字段（值只存该站 id，不存整条 URL）：
+                //      td=土豆源   → 土豆无可跳转详情页，只显示 id（不加 link:true）
+                //      qq=腾讯源   → v.qq.com/x/page/{id}.html
+                //      yt=YouTube源 → youtube.com/watch?v={id}
+                //      nico=nico源  → nicovideo.jp/watch/{id}
+                //      lin=其他源   → 值本身就是完整链接（直接当 href）
+                //   另外 st=直传源 是「无等号标记」，不赋值，单独写一个 st 即代表直传
                 { key: 'v', label: '新浪vid', value: data.v, hideIfEmpty: true },
                 { key: 'vi', label: 'AcFun vid', value: data.vi, hideIfEmpty: true },
-                { key: 'y', label: '优酷vid', value: data.y, hideIfEmpty: true },
+                { key: 'y', label: '优酷vid', value: data.y, hideIfEmpty: true, link: true },
+                { key: 'td', label: '土豆源', value: data.td, hideIfEmpty: true },
+                { key: 'st', label: '直传源', value: data.st ? '是' : '', hideIfEmpty: true },
+                { key: 'qq', label: '腾讯源', value: data.qq, hideIfEmpty: true, link: true },
+                { key: 'yt', label: 'YouTube源', value: data.yt, hideIfEmpty: true, link: true },
+                { key: 'nico', label: 'nico源', value: data.nico, hideIfEmpty: true, link: true },
+                { key: 'lin', label: '其他源', value: data.lin, hideIfEmpty: true, link: true },
                 { key: 'vp', label: '视频分区', value: vpValue, hideIfEmpty: true },
             ];
 
@@ -2167,7 +2367,25 @@
                 if (item.hideIfEmpty && !item.value) continue;
                 const div = document.createElement('div');
                 div.className = 'info-item';
-                div.innerHTML = `<span class="label">${item.label}</span><span class="value">${item.isHtml ? item.value : (item.value || '-')}</span>`;
+                const labelEl = document.createElement('span');
+                labelEl.className = 'label';
+                labelEl.textContent = item.label;
+                const valEl = document.createElement('span');
+                valEl.className = 'value';
+                // 来源字段（link:true）：id 本身是超链接，点一下跳该源站视频页；
+                // 能拼出链接的再补一个「复制链接」按钮（复制的是跳转地址）
+                const href = item.link ? sourceFieldUrl(item.key, item.value) : null;
+                if (item.isHtml) {
+                    valEl.innerHTML = item.value;
+                } else if (href) {
+                    valEl.classList.add('value-with-copy');
+                    valEl.appendChild(makeValueLink(href, item.value));
+                    valEl.appendChild(makeCopyLinkBtn(href));
+                } else {
+                    valEl.textContent = item.value || '-';
+                }
+                div.appendChild(labelEl);
+                div.appendChild(valEl);
                 infoList.appendChild(div);
             }
 
