@@ -513,26 +513,54 @@
             min-width: 0;
             flex: 1;
         }
+        /* 分P 的来源区。
+           注意：这里**不能**给固定 max-width（px/rem）——那会变成整个页面的最小宽度：
+           一条 280 字的链接会把 <body> 顶到 640px，窄屏直接被切掉。
+           改成用 flex 分配（flex:1 1 0），宽度由布局给，不由内容决定。 */
         .part-vids {
             display: flex;
             flex-wrap: wrap;
+            align-items: center;
+            justify-content: flex-end;
             gap: 6px 10px;
-            flex-shrink: 0;
+            flex: 1 1 0;
+            min-width: 0;
         }
         .part-vid {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
             font-size: 12px;
             color: #999;
             font-variant-numeric: tabular-nums;
+            /* 每个来源占满一整行：一个分P 里可能有多个来源（如 qq + lin），
+               挤在一行会把长链接压到几乎看不见 */
+            flex: 1 0 100%;
+            min-width: 0;
+            max-width: 100%;
         }
         .part-vid b {
             color: #666;
             font-weight: 500;
+            flex: none;
+        }
+        /* 值（链接或纯文本）单独包一层：过长时用省略号截断。
+           width:0 是关键——把值的「固有宽度」归零。
+           只写 flex-basis:0 或 min-width:0 都不够，浏览器算父级最小宽度时仍会
+           按内容（280 字的链接 ≈ 1643px）撑，于是整页被顶宽。
+           完整值挂在 .part-vid 的 title 上，悬停可见。 */
+        .part-vid .part-vid-val {
+            flex: 1 1 0;
+            width: 0;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
         /* 分P 里的来源 id：做成链接，交互与「数据来源」一致（新标签页打开 + hover 下划线） */
         .part-vid a {
             color: #FD4C5B;
             text-decoration: none;
-            word-break: break-all;
         }
         .part-vid a:hover {
             text-decoration: underline;
@@ -916,6 +944,16 @@
             .video-detail { order: -2; }
             .divider { order: -1; }
             .stats-grid { order: 0; }
+            /* 分P：窄屏没有横向空间，让来源区独占一行，
+               长链接才有地方显示（否则会被压成 0 宽，什么也看不见） */
+            .part-item {
+                flex-wrap: wrap;
+                align-items: center;
+            }
+            .part-vids {
+                flex: 1 0 100%;
+                justify-content: flex-start;
+            }
         }
 
         /* 平板（≥768px）：档案表格式布局 —— 上：标题+双列元信息；下：左（封面+统计）右（简介+来源） */
@@ -2104,9 +2142,14 @@
                             // 来源类子字段：能拼出视频页的（y/qq/yt/nico/lin）渲染成超链接，
                             // td（土豆）与 v/vi 无模板，退化为纯文本
                             const partHref = sourceFieldUrl(k, sub[k]);
-                            s.appendChild(document.createTextNode(' '));
-                            if (partHref) s.appendChild(makeValueLink(partHref, sub[k]));
-                            else s.appendChild(document.createTextNode(sub[k]));
+                            // 值单独包一层 .part-vid-val：过长时省略号截断，不撑破卡片
+                            const valEl = document.createElement('span');
+                            valEl.className = 'part-vid-val';
+                            if (partHref) valEl.appendChild(makeValueLink(partHref, sub[k]));
+                            else valEl.textContent = sub[k];
+                            s.appendChild(valEl);
+                            // 有链接就配一个「复制链接」按钮，交互与来源字段卡一致
+                            if (partHref) s.appendChild(makeCopyLinkBtn(partHref));
                             s.title = sub[k];
                         } else {
                             s.title = label;
